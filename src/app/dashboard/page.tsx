@@ -45,15 +45,15 @@ export default function DashboardPage() {
       // If it's a PDF, just send the file as is
       formData.append("file", fileWithStatus.file);
     } else {
-      // If it's an Excel file, convert to CSV and send
+      // If it's an Excel file, convert to plain text and send
       try {
-        const csvData = await convertExcelToCsv(fileWithStatus.file); // Assuming convertExcelToCsv is a function you have
-        const csvFile = new File([csvData], `${fileWithStatus.name}.csv`, {
-          type: "text/csv",
+        const textData = await convertExcelToText(fileWithStatus.file);
+        const textFile = new File([textData], `${fileWithStatus.name}.txt`, {
+          type: "text/plain",
         });
-        formData.append("file", csvFile);
+        formData.append("file", textFile);
       } catch (error) {
-        console.error("Error converting Excel to CSV:", error);
+        console.error("Error converting Excel to text:", error);
         // Handle conversion error, maybe update file status
         return;
       }
@@ -70,7 +70,7 @@ export default function DashboardPage() {
         body: JSON.stringify({ files: [fileWithStatus] }), // Process only the new file
       });
 
-      // Send the file (original PDF or converted CSV) to your API
+      // Send the file (original PDF or converted text) to your API
       const apiResponse = await fetch(apiUrl, {
         method: "POST",
         body: formData,
@@ -114,7 +114,7 @@ export default function DashboardPage() {
   );
 }
 
-async function convertExcelToCsv(file: File): Promise<string> {
+async function convertExcelToText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -124,8 +124,8 @@ async function convertExcelToCsv(file: File): Promise<string> {
         const workbook = XLSX.read(data, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const csv = XLSX.utils.sheet_to_csv(worksheet);
-        resolve(csv);
+        const text = XLSX.utils.sheet_to_txt(worksheet);
+        resolve(text);
       } catch (error) {
         reject(error);
       }
