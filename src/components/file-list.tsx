@@ -58,7 +58,7 @@ export function FileList({ files }: FileListProps) {
                     {file.uploadDate.toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Badge variant="secondary" className="text-green-600 border-green-600/20">Processed</Badge>
+                    <Badge variant="outline" className="border-green-500 text-green-600">Processed</Badge>
                   </TableCell>
                 </TableRow>
               ))

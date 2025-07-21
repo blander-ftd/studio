@@ -11,7 +11,7 @@ export default function DashboardPage() {
 
   const handleUploadComplete = (newFile: UploadedFile) => {
     if (newFile.type === "PDF") {
-        newFile.icon = <FileText className="h-6 w-6 text-red-500" />;
+        newFile.icon = <FileText className="h-6 w-6 text-destructive" />;
     } else {
         newFile.icon = <FileSpreadsheet className="h-6 w-6 text-green-500" />;
     }
