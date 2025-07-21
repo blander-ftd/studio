@@ -10,12 +10,22 @@ export default function DashboardPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
 
   const handleUploadComplete = (newFile: UploadedFile) => {
-    if (newFile.type === "PDF") {
+    setFiles((prevFiles) => {
+      // Prevent adding duplicates
+      if (prevFiles.some(file => file.id === newFile.id)) {
+        return prevFiles;
+      }
+      if (newFile.type === "PDF") {
         newFile.icon = <FileText className="h-6 w-6 text-destructive" />;
-    } else {
+      } else {
         newFile.icon = <FileSpreadsheet className="h-6 w-6 text-green-500" />;
-    }
-    setFiles((prevFiles) => [newFile, ...prevFiles]);
+      }
+      return [newFile, ...prevFiles];
+    });
+  };
+
+  const handleRemoveFile = (fileId: string) => {
+    setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
   };
 
   return (
@@ -25,7 +35,7 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold font-headline tracking-tight">Inicio</h1>
         </div>
         <FileUploader onUploadComplete={handleUploadComplete} />
-        <FileList files={files} />
+        <FileList files={files} onRemoveFile={handleRemoveFile} />
       </div>
     </div>
   );

@@ -12,9 +12,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface FileListProps {
   files: UploadedFile[];
+  onRemoveFile: (fileId: string) => void;
 }
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -26,7 +28,7 @@ function formatBytes(bytes: number, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
-export function FileList({ files }: FileListProps) {
+export function FileList({ files, onRemoveFile }: FileListProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -46,7 +48,8 @@ export function FileList({ files }: FileListProps) {
               <TableHead>Nombre</TableHead>
               <TableHead>Tamaño</TableHead>
               <TableHead>Fecha de Carga</TableHead>
-              <TableHead className="text-right">Estado</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -63,14 +66,20 @@ export function FileList({ files }: FileListProps) {
                   <TableCell>
                     {file.uploadDate.toLocaleDateString()}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell>
                     <Badge variant="outline" className="border-green-500 text-green-600">Procesado</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => onRemoveFile(file.id)}>
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Eliminar</span>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   Aún no se han cargado archivos.
                 </TableCell>
               </TableRow>
