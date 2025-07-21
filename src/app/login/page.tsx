@@ -28,11 +28,13 @@ export default function LoginPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" required />
             </div>
-            <Link href="/dashboard" className="w-full">
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-                Login
-              </Button>
-            </Link>
+            <div className="pt-2">
+              <Link href="/dashboard" className="w-full">
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+                  Login
+                </Button>
+              </Link>
+            </div>
           </div>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
