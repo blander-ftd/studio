@@ -13,7 +13,7 @@ export default function LoginPage() {
       <Card className="mx-auto max-w-sm w-full shadow-2xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center items-center gap-2 mb-4">
-            <FileCatalystLogo className="h-20 w-20 text-primary" />
+            <FileCatalystLogo className="h-24 w-24 text-primary" />
             <CardTitle className="text-3xl font-bold">Portal de Aliados Comerciales</CardTitle>
           </div>
           <CardDescription>Enter your credentials to access your account</CardDescription>
