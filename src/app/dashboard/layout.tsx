@@ -49,13 +49,6 @@ export default function DashboardLayout({
                 <Home className="h-4 w-4" />
                 Inicio
               </Link>
-              <Link
-                href="#"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <Settings className="h-4 w-4" />
-                Configuración
-              </Link>
             </nav>
           </div>
           <div className="mt-auto p-4">
@@ -95,13 +88,6 @@ export default function DashboardLayout({
                 >
                   <Home className="h-5 w-5" />
                   Inicio
-                </Link>
-                <Link
-                  href="#"
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                >
-                  <Settings className="h-5 w-5" />
-                  Configuración
                 </Link>
               </nav>
             </SheetContent>
