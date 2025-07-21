@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface FileListProps {
   files: UploadedFile[];
@@ -28,9 +29,14 @@ function formatBytes(bytes: number, decimals = 2) {
 export function FileList({ files }: FileListProps) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Uploaded Files</CardTitle>
-        <CardDescription>A list of your recently uploaded files.</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div className="space-y-1.5">
+            <CardTitle>Uploaded Files</CardTitle>
+            <CardDescription>A list of your recently uploaded files.</CardDescription>
+        </div>
+        <div>
+            <Button disabled={files.length === 0} size="lg">Process Files</Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>

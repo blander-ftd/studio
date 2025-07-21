@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { FileCatalystLogo } from "@/components/icons"
+import { FarmatodoLogo } from "@/components/icons"
 
 export default function LoginPage() {
   return (
@@ -13,8 +13,7 @@ export default function LoginPage() {
       <Card className="mx-auto max-w-sm w-full shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center items-center gap-2 mb-4">
-            <FileCatalystLogo className="h-8 w-8 text-primary" />
-            <CardTitle className="text-3xl font-bold font-headline">File Catalyst</CardTitle>
+            <FarmatodoLogo className="h-10" />
           </div>
           <CardDescription>Enter your credentials to access your account</CardDescription>
         </CardHeader>

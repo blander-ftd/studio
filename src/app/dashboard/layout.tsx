@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FileCatalystLogo } from "@/components/icons";
+import { FarmatodoLogo } from "@/components/icons";
 import {
   Home,
   LineChart,
@@ -36,15 +36,14 @@ export default function DashboardLayout({
         <nav className="flex flex-col h-full">
           <div className="flex h-16 items-center border-b px-6">
             <Link href="#" className="flex items-center gap-2 font-semibold">
-              <FileCatalystLogo className="h-6 w-6 text-primary" />
-              <span className="font-headline">File Catalyst</span>
+              <FarmatodoLogo className="h-8" />
             </Link>
           </div>
           <div className="flex-1 overflow-auto py-2">
             <nav className="grid items-start px-4 text-sm font-medium">
               <Link
                 href="#"
-                className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
+                className="flex items-center gap-3 rounded-lg bg-accent px-3 py-2 text-accent-foreground transition-all hover:text-primary"
               >
                 <Home className="h-4 w-4" />
                 Dashboard
@@ -59,18 +58,15 @@ export default function DashboardLayout({
             </nav>
           </div>
           <div className="mt-auto p-4">
-             <Card>
-                <CardContent className="p-2 flex items-center gap-2">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src="https://placehold.co/100x100" alt="@shadcn" />
-                  <AvatarFallback>JP</AvatarFallback>
-                </Avatar>
-                <div>
-                    <p className="text-sm font-medium leading-none">John Pilot</p>
-                    <p className="text-xs leading-none text-muted-foreground">john@filecatalyst.com</p>
-                </div>
-                </CardContent>
-            </Card>
+            <div className="flex items-center gap-2">
+              <Avatar className="h-9 w-9">
+                <AvatarFallback>N</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium leading-none">John Pilot</p>
+                <p className="text-xs leading-none text-muted-foreground">john@filecatalyst.com</p>
+              </div>
+            </div>
           </div>
         </nav>
       </aside>
@@ -89,8 +85,8 @@ export default function DashboardLayout({
                   href="#"
                   className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
                 >
-                  <FileCatalystLogo className="h-5 w-5 transition-all group-hover:scale-110" />
-                  <span className="sr-only">File Catalyst</span>
+                  <FarmatodoLogo className="h-5 w-5 transition-all group-hover:scale-110" />
+                  <span className="sr-only">FARMATODO</span>
                 </Link>
                 <Link
                   href="#"
