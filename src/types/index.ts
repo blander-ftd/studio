@@ -10,4 +10,5 @@ export type UploadedFile = {
   uploadDate: Date;
   icon: ReactNode;
   status: FileStatus;
+  processedData: any | null;
 };

@@ -9,7 +9,7 @@ import { FileSpreadsheet, FileText } from "lucide-react";
 export default function DashboardPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
 
-  const handleUploadComplete = (newFile: Omit<UploadedFile, 'status'>) => {
+  const handleUploadComplete = (newFile: Omit<UploadedFile, 'status' | 'processedData'>) => {
     setFiles((prevFiles) => {
       // Prevent adding duplicates
       if (prevFiles.some(file => file.id === newFile.id)) {
@@ -18,7 +18,8 @@ export default function DashboardPage() {
       
       const fileWithStatus: UploadedFile = {
           ...newFile,
-          status: "Sin procesar"
+          status: "Sin procesar",
+          processedData: null,
       }
 
       if (fileWithStatus.type === "PDF") {
@@ -41,14 +42,20 @@ export default function DashboardPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ files }),
+        body: JSON.stringify({ files: files.filter(f => f.status === 'Sin procesar') }),
       });
 
       if (response.ok) {
-        console.log('Test POST request successful:', await response.json());
-        // On success, update the status
+        const result = await response.json();
+        console.log('Test POST request successful:', result);
+        
+        // On success, update the status and store processed data
         setFiles(prevFiles => 
-            prevFiles.map(file => ({ ...file, status: "Procesado" }))
+            prevFiles.map(file => ({ 
+                ...file, 
+                status: "Procesado",
+                processedData: result.data // Assuming the response has a 'data' field
+            }))
         );
       } else {
         const errorText = await response.text();

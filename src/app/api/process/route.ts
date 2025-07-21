@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
+    console.log('POST request received');
     // The URL of your external Google Cloud Run function
     const externalUrl = 'https://transfer-argentina-function-582538203517.us-central1.run.app';
-    
+    console.log(`Fetching external function at: ${externalUrl}`);
+
     // Forward the request body to the external function
     const body = await request.json();
+    console.log('Request body:', body);
 
     const externalResponse = await fetch(externalUrl, {
       method: 'POST',
@@ -24,6 +27,7 @@ export async function POST(request: Request) {
     }
 
     const data = await externalResponse.json();
+    console.log('External function response data:', data);
     return NextResponse.json(data);
 
   } catch (error) {
@@ -34,7 +38,10 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
+    console.log('GET request received');
     const externalUrl = 'https://transfer-argentina-function-582538203517.us-central1.run.app';
+    console.log(`Fetching external function at: ${externalUrl}`);
+
     const externalResponse = await fetch(externalUrl);
 
      if (!externalResponse.ok) {
@@ -46,6 +53,7 @@ export async function GET() {
     }
 
     const data = await externalResponse.json();
+    console.log('External function response data:', data);
     return NextResponse.json(data);
 
   } catch (error) {

@@ -12,8 +12,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Sparkles } from "lucide-react";
+import { X, Sparkles, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface FileListProps {
   files: UploadedFile[];
@@ -31,6 +32,8 @@ function formatBytes(bytes: number, decimals = 2) {
 }
 
 export function FileList({ files, onRemoveFile, onProcessFiles }: FileListProps) {
+  const hasUnprocessedFiles = files.some(file => file.status === "Sin procesar");
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -39,7 +42,7 @@ export function FileList({ files, onRemoveFile, onProcessFiles }: FileListProps)
             <CardDescription>Una lista de sus archivos cargados recientemente.</CardDescription>
         </div>
         <div>
-            <Button disabled={files.length === 0} size="lg" onClick={onProcessFiles}>
+            <Button disabled={!hasUnprocessedFiles} size="lg" onClick={onProcessFiles}>
                 <Sparkles className="mr-2 h-4 w-4" />
                 Procesar Archivos
             </Button>
@@ -83,6 +86,14 @@ export function FileList({ files, onRemoveFile, onProcessFiles }: FileListProps)
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
+                    <Link href={`/dashboard/file/${file.id}`} passHref>
+                      <Button variant="ghost" size="icon" asChild>
+                        <a>
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">Ver</span>
+                        </a>
+                      </Button>
+                    </Link>
                     <Button variant="ghost" size="icon" onClick={() => onRemoveFile(file.id)}>
                       <X className="h-4 w-4" />
                       <span className="sr-only">Eliminar</span>
