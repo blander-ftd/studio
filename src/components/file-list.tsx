@@ -86,14 +86,12 @@ export function FileList({ files, onRemoveFile, onProcessFiles }: FileListProps)
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={`/dashboard/file/${file.id}`} passHref>
-                      <Button variant="ghost" size="icon" asChild>
-                        <a>
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">Ver</span>
-                        </a>
-                      </Button>
-                    </Link>
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link href={`/dashboard/file/${file.id}`}>
+                          <Eye className="h-4 w-4" />
+                          <span className="sr-only">Ver</span>
+                      </Link>
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => onRemoveFile(file.id)}>
                       <X className="h-4 w-4" />
                       <span className="sr-only">Eliminar</span>
