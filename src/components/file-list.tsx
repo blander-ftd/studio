@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FileListProps {
@@ -39,7 +39,10 @@ export function FileList({ files, onRemoveFile, onProcessFiles }: FileListProps)
             <CardDescription>Una lista de sus archivos cargados recientemente.</CardDescription>
         </div>
         <div>
-            <Button disabled={files.length === 0} size="lg" onClick={onProcessFiles}>Procesar Archivos</Button>
+            <Button disabled={files.length === 0} size="lg" onClick={onProcessFiles}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Procesar Archivos
+            </Button>
         </div>
       </CardHeader>
       <CardContent>

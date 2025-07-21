@@ -34,10 +34,29 @@ export default function DashboardPage() {
     setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
   };
 
-  const handleProcessFiles = () => {
-    setFiles(prevFiles => 
-        prevFiles.map(file => ({ ...file, status: "Procesado" }))
-    );
+  const handleProcessFiles = async () => {
+    // Make a test POST request
+    try {
+      const response = await fetch('https://httpbin.org/post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ files: files.map(f => f.name) }),
+      });
+
+      if (response.ok) {
+        console.log('Test POST request successful:', await response.json());
+        // On success, update the status
+        setFiles(prevFiles => 
+            prevFiles.map(file => ({ ...file, status: "Procesado" }))
+        );
+      } else {
+        console.error('Test POST request failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error during test POST request:', error);
+    }
   };
 
   return (
