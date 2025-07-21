@@ -19,7 +19,6 @@ import Link from "next/link";
 interface FileListProps {
   files: UploadedFile[];
   onRemoveFile: (fileId: string) => void;
-  onProcessFiles: () => void;
 }
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -31,21 +30,13 @@ function formatBytes(bytes: number, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
-export function FileList({ files, onRemoveFile, onProcessFiles }: FileListProps) {
-  const hasUnprocessedFiles = files.some(file => file.status === "Sin procesar");
-
+export function FileList({ files, onRemoveFile }: FileListProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="space-y-1.5">
             <CardTitle>Archivos Cargados</CardTitle>
             <CardDescription>Una lista de sus archivos cargados recientemente.</CardDescription>
-        </div>
-        <div>
-            <Button disabled={!hasUnprocessedFiles} size="lg" onClick={onProcessFiles}>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Procesar Archivos
-            </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -80,13 +71,14 @@ export function FileList({ files, onRemoveFile, onProcessFiles }: FileListProps)
                       className={cn({
                           "border-yellow-500 text-yellow-600": file.status === "Sin procesar",
                           "border-green-500 text-green-600": file.status === "Procesado",
+                          "border-red-500 text-red-600": file.status === "Error",
                       })}
                     >
                       {file.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" asChild>
+                     <Button variant="ghost" size="icon" asChild>
                       <Link href={`/dashboard/file/${file.id}`}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">Ver</span>

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type FileStatus = "Sin procesar" | "Procesado";
+export type FileStatus = "Sin procesar" | "Procesado" | "Error";
 
 export type UploadedFile = {
   id: string;
@@ -11,4 +11,5 @@ export type UploadedFile = {
   icon: ReactNode;
   status: FileStatus;
   processedData: any | null;
+  file: File;
 };

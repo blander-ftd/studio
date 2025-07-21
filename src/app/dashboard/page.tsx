@@ -1,18 +1,19 @@
 "use client";
 
 import { useState } from "react";
-
+import * as XLSX from "xlsx";
 import { FileList } from "@/components/file-list";
 import { FileUploader } from "@/components/file-uploader";
 import type { UploadedFile } from "@/types";
 import { FileSpreadsheet, FileText } from "lucide-react";
-import * as XLSX from 'xlsx';
+import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const { toast } = useToast();
 
   const handleUploadComplete = async (
-    newFile: Omit<UploadedFile, "status" | "processedData">
+    newFile: Omit<UploadedFile, "status" | "processedData" | "file"> & { file: File }
   ) => {
     // Create a new file object with initial status and processedData
     const fileWithStatus: UploadedFile = {
@@ -39,61 +40,77 @@ export default function DashboardPage() {
     });
 
     // Automatically process the newly uploaded file
-    const formData = new FormData();
-
-    if (fileWithStatus.type === "PDF") {
-      // If it's a PDF, just send the file as is
-      formData.append("file", fileWithStatus.file);
-    } else {
-      // If it's an Excel file, convert to plain text and send
-      try {
-        const textData = await convertExcelToText(fileWithStatus.file);
-        const textFile = new File([textData], `${fileWithStatus.name}.txt`, {
-          type: "text/plain",
-        });
-        formData.append("file", textFile);
-      } catch (error) {
-        console.error("Error converting Excel to text:", error);
-        // Handle conversion error, maybe update file status
-        return;
-      }
-    }
-
-    const apiUrl = "YOUR_API_URL"; // Replace with your actual API endpoint
-
     try {
+      let fileData;
+      let fileTypeForRequest: 'pdf' | 'excel' = 'excel';
+
+      if (fileWithStatus.type === "PDF") {
+        fileTypeForRequest = 'pdf';
+        fileData = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target?.result);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(fileWithStatus.file);
+        });
+      } else { // Excel
+        fileTypeForRequest = 'excel';
+        fileData = await convertExcelToText(fileWithStatus.file);
+      }
+
       const response = await fetch("/api/process", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ files: [fileWithStatus] }), // Process only the new file
-      });
-
-      // Send the file (original PDF or converted text) to your API
-      const apiResponse = await fetch(apiUrl, {
-        method: "POST",
-        body: formData,
+        body: JSON.stringify({ 
+          type: fileTypeForRequest,
+          file: fileData 
+        }),
       });
 
       if (!response.ok) {
-        throw new Error(`Error processing file: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Error procesando el archivo: ${errorText || response.statusText}`);
       }
-      if (!apiResponse.ok) {
-        throw new Error(`Error sending file to API: ${apiResponse.statusText}`);
-      }
-    
+
+      const result = await response.json();
+
+      setFiles((prevFiles) =>
+        prevFiles.map((f) =>
+          f.id === fileWithStatus.id
+            ? { ...f, status: "Procesado", processedData: result }
+            : f
+        )
+      );
+
+      toast({
+        title: "Archivo procesado",
+        description: `${fileWithStatus.name} ha sido procesado exitosamente.`,
+      });
+
     } catch (error) {
       console.error("Error processing file:", error);
-      // Optionally, update file status to an error state here
+      const errorMessage = error instanceof Error ? error.message : "Ocurrió un error desconocido";
+      
+      setFiles((prevFiles) =>
+        prevFiles.map((f) =>
+          f.id === fileWithStatus.id
+            ? { ...f, status: "Error" } // You might want to add an "Error" status
+            : f
+        )
+      );
+      
+      toast({
+        title: "Error de procesamiento",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
   const handleRemoveFile = (fileId: string) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
   };
-
-  // handleProcessFiles is no longer needed as processing happens on upload
 
   return (
     <div className="grid flex-1 items-start gap-4 md:gap-8">
@@ -107,7 +124,6 @@ export default function DashboardPage() {
         <FileList
           files={files}
           onRemoveFile={handleRemoveFile}
-          onProcessFiles={() => {}} // Pass an empty function as it's not needed anymore
         />
       </div>
     </div>
