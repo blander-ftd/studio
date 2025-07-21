@@ -35,27 +35,26 @@ export default function DashboardPage() {
   };
 
   const handleProcessFiles = async () => {
-    // Make a test POST request
+    // Make a test POST request to our local API proxy
     try {
-      const response = await fetch('https://httpbin.org/post', {
-        method: 'POST',
+      const response = await fetch('/api/process', {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ files: files.map(f => f.name) }),
+        }
       });
 
       if (response.ok) {
-        console.log('Test POST request successful:', await response.json());
+        console.log('Test GET request successful:', await response.json());
         // On success, update the status
         setFiles(prevFiles => 
             prevFiles.map(file => ({ ...file, status: "Procesado" }))
         );
       } else {
-        console.error('Test POST request failed:', response.statusText);
+        console.error('Test GET request failed:', response.statusText);
       }
     } catch (error) {
-      console.error('Error during test POST request:', error);
+      console.error('Error during test GET request:', error);
     }
   };
 
