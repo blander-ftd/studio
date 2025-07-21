@@ -32,9 +32,9 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <aside className="fixed inset-y-0 left-0 z-10 hidden w-60 flex-col border-r bg-background sm:flex">
+      <aside className="fixed inset-y-0 left-0 z-10 hidden w-60 flex-col border-r bg-sidebar text-sidebar-foreground sm:flex">
         <nav className="flex flex-col h-full">
-          <div className="flex h-20 items-center border-b px-4">
+          <div className="flex h-20 items-center border-b border-sidebar-border px-4">
             <Link href="#" className="flex items-center gap-2 font-semibold">
               <FileCatalystLogo className="h-12 w-12" />
               <span className="text-base">Portal de Aliados Comerciales</span>
@@ -44,7 +44,7 @@ export default function DashboardLayout({
             <nav className="grid items-start px-4 text-sm font-medium">
               <Link
                 href="#"
-                className="flex items-center gap-3 rounded-lg bg-accent px-3 py-2 text-accent-foreground transition-all hover:text-primary"
+                className="flex items-center gap-3 rounded-lg bg-sidebar-accent px-3 py-2 text-sidebar-accent-foreground transition-all hover:text-primary"
               >
                 <Home className="h-4 w-4" />
                 Inicio
