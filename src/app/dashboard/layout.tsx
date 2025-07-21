@@ -36,7 +36,7 @@ export default function DashboardLayout({
         <nav className="flex flex-col h-full">
           <div className="flex h-20 items-center border-b px-4">
             <Link href="#" className="flex items-center gap-2 font-semibold">
-              <FileCatalystLogo className="h-10 w-10" />
+              <FileCatalystLogo className="h-12 w-12" />
               <span className="text-base">Portal de Aliados Comerciales</span>
             </Link>
           </div>
