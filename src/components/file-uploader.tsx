@@ -36,8 +36,8 @@ export function FileUploader({ onUploadComplete }: FileUploaderProps) {
 
       if (validFiles.length !== files.length) {
         toast({
-          title: "Invalid File Type",
-          description: "Only Excel (.xls, .xlsx) and PDF (.pdf) files are allowed.",
+          title: "Tipo de archivo no válido",
+          description: "Solo se permiten archivos de Excel (.xls, .xlsx) y PDF (.pdf).",
           variant: "destructive",
         });
       }
@@ -126,13 +126,13 @@ export function FileUploader({ onUploadComplete }: FileUploaderProps) {
             />
             <UploadCloud className={`h-12 w-12 mb-4 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
             <p className="mb-2 text-sm text-center text-muted-foreground">
-                <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+                <span className="font-semibold text-primary">Haga clic para cargar</span> o arrastre y suelte
             </p>
-            <p className="text-xs text-muted-foreground">Supports: .pdf, .xls, .xlsx</p>
+            <p className="text-xs text-muted-foreground">Soporta: .pdf, .xls, .xlsx</p>
         </div>
         {uploadingFiles.length > 0 && (
             <div className="space-y-2">
-                <h3 className="text-sm font-medium">Uploading...</h3>
+                <h3 className="text-sm font-medium">Cargando...</h3>
                 {uploadingFiles.map(upload => (
                 <div key={upload.id} className="p-2 border rounded-lg flex items-center gap-4">
                     <FileIcon className="h-6 w-6 text-muted-foreground" />

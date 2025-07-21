@@ -31,22 +31,22 @@ export function FileList({ files }: FileListProps) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="space-y-1.5">
-            <CardTitle>Uploaded Files</CardTitle>
-            <CardDescription>A list of your recently uploaded files.</CardDescription>
+            <CardTitle>Archivos Cargados</CardTitle>
+            <CardDescription>Una lista de sus archivos cargados recientemente.</CardDescription>
         </div>
         <div>
-            <Button disabled={files.length === 0} size="lg">Process Files</Button>
+            <Button disabled={files.length === 0} size="lg">Procesar Archivos</Button>
         </div>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[80px]">Type</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Size</TableHead>
-              <TableHead>Date Added</TableHead>
-              <TableHead className="text-right">Status</TableHead>
+              <TableHead className="w-[80px]">Tipo</TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Tamaño</TableHead>
+              <TableHead>Fecha de Carga</TableHead>
+              <TableHead className="text-right">Estado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -64,14 +64,14 @@ export function FileList({ files }: FileListProps) {
                     {file.uploadDate.toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Badge variant="outline" className="border-green-500 text-green-600">Processed</Badge>
+                    <Badge variant="outline" className="border-green-500 text-green-600">Procesado</Badge>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center">
-                  No files uploaded yet.
+                  Aún no se han cargado archivos.
                 </TableCell>
               </TableRow>
             )}
