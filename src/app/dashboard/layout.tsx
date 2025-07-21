@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FarmatodoLogo } from "@/components/icons";
+import { FileCatalystLogo } from "@/components/icons";
 import {
   Home,
   LineChart,
@@ -36,7 +36,8 @@ export default function DashboardLayout({
         <nav className="flex flex-col h-full">
           <div className="flex h-16 items-center border-b px-6">
             <Link href="#" className="flex items-center gap-2 font-semibold">
-              <FarmatodoLogo className="h-8" />
+              <FileCatalystLogo className="h-8 w-8" />
+              <span className="">File Catalyst</span>
             </Link>
           </div>
           <div className="flex-1 overflow-auto py-2">
@@ -85,8 +86,8 @@ export default function DashboardLayout({
                   href="#"
                   className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
                 >
-                  <FarmatodoLogo className="h-5 w-5 transition-all group-hover:scale-110" />
-                  <span className="sr-only">FARMATODO</span>
+                  <FileCatalystLogo className="h-5 w-5 transition-all group-hover:scale-110" />
+                  <span className="sr-only">File Catalyst</span>
                 </Link>
                 <Link
                   href="#"
