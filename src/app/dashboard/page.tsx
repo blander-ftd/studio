@@ -35,7 +35,6 @@ export default function DashboardPage() {
   };
 
   const handleProcessFiles = async () => {
-    // Make a test POST request to our local API proxy
     try {
       const response = await fetch('/api/process', {
         method: 'GET',
@@ -51,7 +50,8 @@ export default function DashboardPage() {
             prevFiles.map(file => ({ ...file, status: "Procesado" }))
         );
       } else {
-        console.error('Test GET request failed:', response.statusText);
+        const errorText = await response.text();
+        console.error('Test GET request failed:', errorText || response.statusText);
       }
     } catch (error) {
       console.error('Error during test GET request:', error);
