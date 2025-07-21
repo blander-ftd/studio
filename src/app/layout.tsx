@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'File Catalyst',
-  description: 'Upload and process your files seamlessly.',
+  title: 'Farmatodo Transfers Argentina',
+  description: 'Aplicacion para subida y procesamiento de archivos para Transfers Argentina Farmatodo',
 };
 
 export default function RootLayout({
