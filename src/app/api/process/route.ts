@@ -19,6 +19,7 @@ export async function POST(request: Request) {
     if (!externalResponse.ok) {
       // If the external function returns an error, pass it along
       const errorText = await externalResponse.text();
+      console.error(`External function error: ${externalResponse.status} ${externalResponse.statusText}`, errorText);
       return new NextResponse(errorText, { status: externalResponse.status });
     }
 
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json(data);
 
   } catch (error) {
-    console.error('Error in proxy API route:', error);
+    console.error('Error in proxy POST route:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
@@ -38,6 +39,9 @@ export async function GET() {
 
      if (!externalResponse.ok) {
       const errorText = await externalResponse.text();
+      console.error(`External function GET error: ${externalResponse.status} ${externalResponse.statusText}`, {
+        errorBody: errorText,
+      });
       return new NextResponse(errorText, { status: externalResponse.status });
     }
 
@@ -45,7 +49,7 @@ export async function GET() {
     return NextResponse.json(data);
 
   } catch (error) {
-    console.error('Error in proxy API route:', error);
+    console.error('Error in proxy GET route:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
