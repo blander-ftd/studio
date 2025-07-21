@@ -113,8 +113,8 @@ export function FileUploader({ onUploadComplete }: FileUploaderProps) {
             onDragOver={e => e.preventDefault()}
             onDrop={onDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`flex flex-col items-center justify-center w-full p-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ease-in-out bg-muted/50
-                ${isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary/50 hover:bg-muted"}`}
+            className={`flex flex-col items-center justify-center w-full p-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ease-in-out bg-muted
+                ${isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}
         >
             <input
                 type="file"
