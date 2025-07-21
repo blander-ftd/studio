@@ -8,7 +8,7 @@ import { UploadCloud, File as FileIcon, X } from "lucide-react";
 import type { UploadedFile } from "@/types";
 
 interface FileUploaderProps {
-  onUploadComplete: (file: UploadedFile) => void;
+  onUploadComplete: (file: Omit<UploadedFile, 'status'>) => void;
 }
 
 interface UploadingFile {

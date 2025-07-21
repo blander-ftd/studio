@@ -9,23 +9,35 @@ import { FileSpreadsheet, FileText } from "lucide-react";
 export default function DashboardPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
 
-  const handleUploadComplete = (newFile: UploadedFile) => {
+  const handleUploadComplete = (newFile: Omit<UploadedFile, 'status'>) => {
     setFiles((prevFiles) => {
       // Prevent adding duplicates
       if (prevFiles.some(file => file.id === newFile.id)) {
         return prevFiles;
       }
-      if (newFile.type === "PDF") {
-        newFile.icon = <FileText className="h-6 w-6 text-destructive" />;
-      } else {
-        newFile.icon = <FileSpreadsheet className="h-6 w-6 text-green-500" />;
+      
+      const fileWithStatus: UploadedFile = {
+          ...newFile,
+          status: "Sin procesar"
       }
-      return [newFile, ...prevFiles];
+
+      if (fileWithStatus.type === "PDF") {
+        fileWithStatus.icon = <FileText className="h-6 w-6 text-destructive" />;
+      } else {
+        fileWithStatus.icon = <FileSpreadsheet className="h-6 w-6 text-green-500" />;
+      }
+      return [fileWithStatus, ...prevFiles];
     });
   };
 
   const handleRemoveFile = (fileId: string) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
+  };
+
+  const handleProcessFiles = () => {
+    setFiles(prevFiles => 
+        prevFiles.map(file => ({ ...file, status: "Procesado" }))
+    );
   };
 
   return (
@@ -35,7 +47,11 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold font-headline tracking-tight">Inicio</h1>
         </div>
         <FileUploader onUploadComplete={handleUploadComplete} />
-        <FileList files={files} onRemoveFile={handleRemoveFile} />
+        <FileList 
+          files={files} 
+          onRemoveFile={handleRemoveFile} 
+          onProcessFiles={handleProcessFiles} 
+        />
       </div>
     </div>
   );

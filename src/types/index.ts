@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+export type FileStatus = "Sin procesar" | "Procesado";
+
 export type UploadedFile = {
   id: string;
   name: string;
@@ -7,4 +9,5 @@ export type UploadedFile = {
   type: "PDF" | "Excel";
   uploadDate: Date;
   icon: ReactNode;
+  status: FileStatus;
 };

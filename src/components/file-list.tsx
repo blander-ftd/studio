@@ -13,10 +13,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FileListProps {
   files: UploadedFile[];
   onRemoveFile: (fileId: string) => void;
+  onProcessFiles: () => void;
 }
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -28,7 +30,7 @@ function formatBytes(bytes: number, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
-export function FileList({ files, onRemoveFile }: FileListProps) {
+export function FileList({ files, onRemoveFile, onProcessFiles }: FileListProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -37,7 +39,7 @@ export function FileList({ files, onRemoveFile }: FileListProps) {
             <CardDescription>Una lista de sus archivos cargados recientemente.</CardDescription>
         </div>
         <div>
-            <Button disabled={files.length === 0} size="lg">Procesar Archivos</Button>
+            <Button disabled={files.length === 0} size="lg" onClick={onProcessFiles}>Procesar Archivos</Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -67,7 +69,15 @@ export function FileList({ files, onRemoveFile }: FileListProps) {
                     {file.uploadDate.toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="border-green-500 text-green-600">Procesado</Badge>
+                    <Badge 
+                      variant="outline" 
+                      className={cn({
+                          "border-yellow-500 text-yellow-600": file.status === "Sin procesar",
+                          "border-green-500 text-green-600": file.status === "Procesado",
+                      })}
+                    >
+                      {file.status}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => onRemoveFile(file.id)}>
