@@ -37,24 +37,25 @@ export default function DashboardPage() {
   const handleProcessFiles = async () => {
     try {
       const response = await fetch('/api/process', {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({ files }),
       });
 
       if (response.ok) {
-        console.log('Test GET request successful:', await response.json());
+        console.log('Test POST request successful:', await response.json());
         // On success, update the status
         setFiles(prevFiles => 
             prevFiles.map(file => ({ ...file, status: "Procesado" }))
         );
       } else {
         const errorText = await response.text();
-        console.error('Test GET request failed:', errorText || response.statusText);
+        console.error('Test POST request failed:', errorText || response.statusText);
       }
     } catch (error) {
-      console.error('Error during test GET request:', error);
+      console.error('Error during test POST request:', error);
     }
   };
 
