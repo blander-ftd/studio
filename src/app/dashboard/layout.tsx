@@ -34,10 +34,10 @@ export default function DashboardLayout({
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-60 flex-col border-r bg-background sm:flex">
         <nav className="flex flex-col h-full">
-          <div className="flex h-16 items-center border-b px-6">
+          <div className="flex h-20 items-center border-b px-4">
             <Link href="#" className="flex items-center gap-2 font-semibold">
-              <FileCatalystLogo className="h-8 w-8" />
-              <span className="">File Catalyst</span>
+              <FileCatalystLogo className="h-10 w-10" />
+              <span className="text-base">Portal de Aliados Comerciales</span>
             </Link>
           </div>
           <div className="flex-1 overflow-auto py-2">
@@ -86,8 +86,8 @@ export default function DashboardLayout({
                   href="#"
                   className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
                 >
-                  <FileCatalystLogo className="h-5 w-5 transition-all group-hover:scale-110" />
-                  <span className="sr-only">File Catalyst</span>
+                  <FileCatalystLogo className="h-8 w-8 transition-all group-hover:scale-110" />
+                  <span className="sr-only">Portal de Aliados Comerciales</span>
                 </Link>
                 <Link
                   href="#"
