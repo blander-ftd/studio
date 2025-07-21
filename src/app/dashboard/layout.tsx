@@ -35,7 +35,7 @@ export default function DashboardLayout({
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-60 flex-col border-r bg-sidebar text-sidebar-foreground sm:flex">
         <nav className="flex flex-col h-full">
           <div className="flex h-20 items-center border-b border-sidebar-border px-4">
-            <Link href="#" className="flex items-center gap-2 font-semibold">
+            <Link href="#" className="flex items-center gap-2 font-semibold text-sidebar-foreground">
               <FileCatalystLogo className="h-12 w-12" />
               <span className="text-base">Portal de Aliados Comerciales</span>
             </Link>

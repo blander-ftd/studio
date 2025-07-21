@@ -3,7 +3,7 @@ export const FileCatalystLogo = (props: React.SVGProps<SVGSVGElement>) => (
     viewBox="0 0 800.000000 800.000000"
     preserveAspectRatio="xMidYMid meet" {...props}>
     <g transform="translate(0.000000,800.000000) scale(0.100000,-0.100000)"
-      fill="#002858" stroke="none">
+      fill="currentColor" stroke="none">
       <path d="M950 6619 c0 -916 2 -1080 14 -1076 32 12 299 67 396 81 339 49 700
         46 1040 -10 1028 -169 1933 -824 2416 -1749 265 -506 387 -1042 371 -1619 -8
         -270 -46 -547 -102 -738 l-14 -48 980 0 979 0 0 3120 0 3120 -3040 0 -3040 0
