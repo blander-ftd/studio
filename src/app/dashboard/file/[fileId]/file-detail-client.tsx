@@ -84,9 +84,9 @@ export default function FileDetailClient({ file }: { file: any }) {
                     <CardTitle>Detalles del Archivo</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-4">
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Nombre</span>
-                        <span>{file.name}</span>
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">Nombre</span>
+                        <span className="truncate" title={file.name}>{file.name}</span>
                     </div>
                     <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Tipo</span>
