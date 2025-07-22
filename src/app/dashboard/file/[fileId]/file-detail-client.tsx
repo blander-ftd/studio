@@ -51,7 +51,7 @@ export default function FileDetailClient({ file }: { file: any }) {
                     <TableBody>
                         {file.processedData.preview.map((row: any, index: number) => (
                             <TableRow key={index}>
-                               {columns.map((col: string) => <TableCell key={col}>{row[col]}</TableCell>)}
+                               {columns.map((col: string) => <TableCell key={col}>{String(row[col] ?? '')}</TableCell>)}
                             </TableRow>
                         ))}
                     </TableBody>
@@ -89,23 +89,18 @@ export default function FileDetailClient({ file }: { file: any }) {
                 <CardHeader>
                     <CardTitle>Detalles del Archivo</CardTitle>
                 </CardHeader>
-                <CardContent className="grid gap-4">
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-muted-foreground flex-shrink-0">Nombre</span>
-                        <span className="truncate" title={file.name}>{file.name}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Tipo</span>
-                        <span>{file.type}</span>
-                    </div>
-                     <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Tamaño</span>
-                        <span>{formatBytes(file.size)}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Fecha de Carga</span>
-                        <span>{new Date(file.uploadDate).toLocaleDateString()}</span>
-                    </div>
+                <CardContent className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+                    <span className="text-muted-foreground">Nombre</span>
+                    <span className="truncate font-medium" title={file.name}>{file.name}</span>
+                    
+                    <span className="text-muted-foreground">Tipo</span>
+                    <span className="font-medium">{file.type}</span>
+
+                    <span className="text-muted-foreground">Tamaño</span>
+                    <span className="font-medium">{formatBytes(file.size)}</span>
+                    
+                    <span className="text-muted-foreground">Fecha de Carga</span>
+                    <span className="font-medium">{new Date(file.uploadDate).toLocaleDateString()}</span>
                 </CardContent>
             </Card>
             {file.processedData && (
@@ -113,15 +108,12 @@ export default function FileDetailClient({ file }: { file: any }) {
                     <CardHeader>
                         <CardTitle>Resumen del Procesamiento</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid gap-4">
-                         <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Resumen</span>
-                            <span>{file.processedData.summary}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Filas Encontradas</span>
-                            <span>{file.processedData.rowCount}</span>
-                        </div>
+                    <CardContent className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+                         <span className="text-muted-foreground">Resumen</span>
+                         <span className="font-medium">{file.processedData.summary}</span>
+
+                        <span className="text-muted-foreground">Filas Encontradas</span>
+                        <span className="font-medium">{file.processedData.rowCount}</span>
                     </CardContent>
                 </Card>
             )}
