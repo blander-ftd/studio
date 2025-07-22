@@ -71,12 +71,13 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
                     <Badge 
                       variant="outline" 
                       className={cn("gap-1", {
+                          "border-yellow-500 text-yellow-600": file.status === "Pendiente",
                           "border-blue-500 text-blue-600": file.status === "Procesando",
                           "border-green-500 text-green-600": file.status === "Procesado",
                           "border-red-500 text-red-600": file.status === "Error",
                       })}
                     >
-                       {file.status === "Procesando" && <Loader2 className="h-3 w-3 animate-spin" />}
+                       {(file.status === "Procesando" || file.status === "Pendiente") && <Loader2 className="h-3 w-3 animate-spin" />}
                       {file.status}
                     </Badge>
                   </TableCell>
@@ -88,7 +89,7 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
                             <span className="sr-only">Reintentar</span>
                         </Button>
                       )}
-                      {file.status !== "Error" && (
+                      {file.status === "Procesado" && (
                         <Button variant="ghost" size="icon" asChild>
                             <Link href={`/dashboard/file/${file.id}`}>
                             <Eye className="h-4 w-4" />
