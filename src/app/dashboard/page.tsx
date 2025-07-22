@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import * as XLSX from "xlsx";
 import { FileList } from "@/components/file-list";
 import { FileUploader } from "@/components/file-uploader";
 import type { UploadedFile } from "@/types";
@@ -42,21 +41,14 @@ export default function DashboardPage() {
 
     // Automatically process the newly uploaded file
     try {
-      let fileData;
-      let fileTypeForRequest: 'pdf' | 'excel' = 'excel';
+      const fileData = await new Promise<string | ArrayBuffer | null>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target?.result);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(fileWithStatus.file);
+      });
 
-      if (fileWithStatus.type === "PDF") {
-        fileTypeForRequest = 'pdf';
-        fileData = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => resolve(event.target?.result);
-          reader.onerror = (error) => reject(error);
-          reader.readAsDataURL(fileWithStatus.file);
-        });
-      } else { // Excel
-        fileTypeForRequest = 'excel';
-        fileData = await convertExcelToText(fileWithStatus.file);
-      }
+      const fileTypeForRequest = fileWithStatus.type === 'PDF' ? 'pdf' : 'excel';
 
       const response = await fetch("/api/process", {
         method: "POST",
@@ -140,29 +132,4 @@ export default function DashboardPage() {
       </div>
     </div>
   );
-}
-
-async function convertExcelToText(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      try {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const text = XLSX.utils.sheet_to_txt(worksheet);
-        resolve(text);
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    reader.onerror = (error) => {
-      reject(error);
-    };
-
-    reader.readAsBinaryString(file);
-  });
 }
