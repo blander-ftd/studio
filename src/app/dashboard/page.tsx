@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -69,8 +70,19 @@ export default function DashboardPage() {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Error procesando el archivo: ${errorText || response.statusText}`);
+        const contentType = response.headers.get("content-type");
+        let errorMessage = `Error del servidor: ${response.statusText}`;
+        if (contentType && contentType.includes("application/json")) {
+            const errorJson = await response.json();
+            errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
+        } else {
+            const errorText = await response.text();
+            // Avoid showing a full HTML page in the error.
+            if (!errorText.trim().startsWith("<!DOCTYPE html") && !errorText.trim().startsWith("<html")) {
+                 errorMessage = errorText;
+            }
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -95,14 +107,14 @@ export default function DashboardPage() {
       setFiles((prevFiles) =>
         prevFiles.map((f) =>
           f.id === fileWithStatus.id
-            ? { ...f, status: "Error" } // You might want to add an "Error" status
+            ? { ...f, status: "Error" }
             : f
         )
       );
       
       toast({
         title: "Error de procesamiento",
-        description: errorMessage,
+        description: `Error procesando el archivo: ${errorMessage}`,
         variant: "destructive",
       });
     }
