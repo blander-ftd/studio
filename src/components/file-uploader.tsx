@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useCallback, useRef } from "react";
@@ -51,13 +52,16 @@ export function FileUploader({ onUploadComplete }: FileUploaderProps) {
       setUploadingFiles(prev => [...prev, ...newUploads]);
 
       newUploads.forEach(upload => {
+        // Simulate upload progress
         const interval = setInterval(() => {
           setUploadingFiles(prev =>
             prev.map(f => {
               if (f.id === upload.id) {
-                const newProgress = f.progress + 5;
+                const newProgress = f.progress + 10;
                 if (newProgress >= 100) {
                   clearInterval(interval);
+                  // Use a short timeout to allow the 100% progress to be seen
+                  // before the file is passed to the parent for processing.
                   setTimeout(() => {
                     const fileType = f.file.type === 'application/pdf' ? 'PDF' : 'Excel';
                     onUploadComplete({
@@ -66,10 +70,11 @@ export function FileUploader({ onUploadComplete }: FileUploaderProps) {
                         size: f.file.size,
                         type: fileType,
                         uploadDate: new Date(),
-                        file: f.file,
+                        file: f.file, // Pass the actual file
                     });
+                    // Remove from the local uploading state
                     setUploadingFiles(current => current.filter(uf => uf.id !== f.id));
-                  }, 300);
+                  }, 500);
                   return { ...f, progress: 100 };
                 }
                 return { ...f, progress: newProgress };
