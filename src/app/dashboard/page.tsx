@@ -12,43 +12,25 @@ export default function DashboardPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const { toast } = useToast();
 
-  const handleUploadComplete = async (
-    newFile: Omit<UploadedFile, "status" | "processedData" | "file"> & { file: File }
-  ) => {
-    // Create a new file object with initial status and processedData
-    const fileWithStatus: UploadedFile = {
-      ...newFile,
-      status: "Procesando",
-      processedData: null,
-    };
+  const processFile = async (fileToProcess: UploadedFile) => {
+    // Set status to 'Procesando'
+    setFiles((prevFiles) =>
+      prevFiles.map((f) =>
+        f.id === fileToProcess.id
+          ? { ...f, status: "Procesando" }
+          : f
+      )
+    );
 
-    // Assign icon based on file type
-    if (fileWithStatus.type === "PDF") {
-      fileWithStatus.icon = <FileText className="h-6 w-6 text-destructive" />;
-    } else {
-      fileWithStatus.icon = (
-        <FileSpreadsheet className="h-6 w-6 text-green-500" />
-      );
-    }
-
-    setFiles((prevFiles) => {
-      // Prevent adding duplicates
-      if (prevFiles.some((file) => file.id === newFile.id)) {
-        return prevFiles;
-      }
-      return [fileWithStatus, ...prevFiles];
-    });
-
-    // Automatically process the newly uploaded file
     try {
       const fileData = await new Promise<string | ArrayBuffer | null>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (event) => resolve(event.target?.result);
         reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(fileWithStatus.file);
+        reader.readAsDataURL(fileToProcess.file);
       });
 
-      const fileTypeForRequest = fileWithStatus.type === 'PDF' ? 'pdf' : 'excel';
+      const fileTypeForRequest = fileToProcess.type === 'PDF' ? 'pdf' : 'excel';
 
       const response = await fetch("/api/process", {
         method: "POST",
@@ -69,7 +51,6 @@ export default function DashboardPage() {
             errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
         } else {
             const errorText = await response.text();
-            // Avoid showing a full HTML page in the error.
             if (!errorText.trim().startsWith("<!DOCTYPE html") && !errorText.trim().startsWith("<html")) {
                  errorMessage = errorText;
             }
@@ -81,7 +62,7 @@ export default function DashboardPage() {
 
       setFiles((prevFiles) =>
         prevFiles.map((f) =>
-          f.id === fileWithStatus.id
+          f.id === fileToProcess.id
             ? { ...f, status: "Procesado", processedData: result }
             : f
         )
@@ -89,7 +70,7 @@ export default function DashboardPage() {
 
       toast({
         title: "Archivo procesado",
-        description: `${fileWithStatus.name} ha sido procesado exitosamente.`,
+        description: `${fileToProcess.name} ha sido procesado exitosamente.`,
       });
 
     } catch (error) {
@@ -98,7 +79,7 @@ export default function DashboardPage() {
       
       setFiles((prevFiles) =>
         prevFiles.map((f) =>
-          f.id === fileWithStatus.id
+          f.id === fileToProcess.id
             ? { ...f, status: "Error" }
             : f
         )
@@ -109,6 +90,41 @@ export default function DashboardPage() {
         description: `Error procesando el archivo: ${errorMessage}`,
         variant: "destructive",
       });
+    }
+  };
+
+
+  const handleUploadComplete = async (
+    newFile: Omit<UploadedFile, "status" | "processedData" | "file"> & { file: File }
+  ) => {
+    const fileWithStatus: UploadedFile = {
+      ...newFile,
+      status: "Procesando",
+      processedData: null,
+    };
+
+    if (fileWithStatus.type === "PDF") {
+      fileWithStatus.icon = <FileText className="h-6 w-6 text-destructive" />;
+    } else {
+      fileWithStatus.icon = (
+        <FileSpreadsheet className="h-6 w-6 text-green-500" />
+      );
+    }
+
+    setFiles((prevFiles) => {
+      if (prevFiles.some((file) => file.id === newFile.id)) {
+        return prevFiles;
+      }
+      return [fileWithStatus, ...prevFiles];
+    });
+
+    await processFile(fileWithStatus);
+  };
+
+  const handleRetryProcess = (fileId: string) => {
+    const fileToRetry = files.find(f => f.id === fileId);
+    if (fileToRetry) {
+      processFile(fileToRetry);
     }
   };
 
@@ -128,6 +144,7 @@ export default function DashboardPage() {
         <FileList
           files={files}
           onRemoveFile={handleRemoveFile}
+          onRetryProcess={handleRetryProcess}
         />
       </div>
     </div>

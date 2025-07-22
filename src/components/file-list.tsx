@@ -13,13 +13,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Eye, Loader2 } from "lucide-react";
+import { X, Eye, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 interface FileListProps {
   files: UploadedFile[];
   onRemoveFile: (fileId: string) => void;
+  onRetryProcess: (fileId: string) => void;
 }
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -31,7 +32,7 @@ function formatBytes(bytes: number, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
-export function FileList({ files, onRemoveFile }: FileListProps) {
+export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -81,6 +82,12 @@ export function FileList({ files, onRemoveFile }: FileListProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {file.status === "Error" && (
+                        <Button variant="ghost" size="icon" onClick={() => onRetryProcess(file.id)}>
+                            <RefreshCw className="h-4 w-4" />
+                            <span className="sr-only">Reintentar</span>
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" asChild>
                         <Link href={`/dashboard/file/${file.id}`}>
                           <Eye className="h-4 w-4" />
