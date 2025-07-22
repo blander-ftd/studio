@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type FileStatus = "Sin procesar" | "Procesado" | "Error";
+export type FileStatus = "Procesando" | "Procesado" | "Error";
 
 export type UploadedFile = {
   id: string;

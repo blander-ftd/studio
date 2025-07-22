@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { UploadedFile } from "@/types";
@@ -12,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Sparkles, Eye } from "lucide-react";
+import { X, Eye, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -68,12 +69,13 @@ export function FileList({ files, onRemoveFile }: FileListProps) {
                   <TableCell>
                     <Badge 
                       variant="outline" 
-                      className={cn({
-                          "border-yellow-500 text-yellow-600": file.status === "Sin procesar",
+                      className={cn("gap-1", {
+                          "border-blue-500 text-blue-600": file.status === "Procesando",
                           "border-green-500 text-green-600": file.status === "Procesado",
                           "border-red-500 text-red-600": file.status === "Error",
                       })}
                     >
+                       {file.status === "Procesando" && <Loader2 className="h-3 w-3 animate-spin" />}
                       {file.status}
                     </Badge>
                   </TableCell>

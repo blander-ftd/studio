@@ -19,7 +19,7 @@ export default function DashboardPage() {
     // Create a new file object with initial status and processedData
     const fileWithStatus: UploadedFile = {
       ...newFile,
-      status: "Sin procesar",
+      status: "Procesando",
       processedData: null,
     };
 
