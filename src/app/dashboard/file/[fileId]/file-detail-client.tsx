@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,19 +38,18 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
         return <p className="text-muted-foreground">Aún no hay datos procesados para este archivo.</p>
     }
 
-    // Check for a table-like structure
-    const isTable = file.processedData.columns && Array.isArray(file.processedData.preview) && file.processedData.preview.length > 0;
+    const isTable = Array.isArray(file.processedData.products) && file.processedData.products.length > 0;
 
     if (isTable) {
-        const columns = file.processedData.columns;
-        const previewRows = file.processedData.preview;
+        const columns = Object.keys(file.processedData.products[0]);
+        const previewRows = file.processedData.products;
 
         return (
              <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            {columns.map((col: string) => <TableHead key={col}>{col}</TableHead>)}
+                            {columns.map((col: string) => <TableHead key={col}>{col.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</TableHead>)}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
