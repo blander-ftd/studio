@@ -38,33 +38,7 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
         return <p className="text-muted-foreground">Aún no hay datos procesados para este archivo.</p>
     }
 
-    const isTable = Array.isArray(file.processedData.products) && file.processedData.products.length > 0;
-
-    if (isTable) {
-        const columns = Object.keys(file.processedData.products[0]);
-        const previewRows = file.processedData.products;
-
-        return (
-             <div className="overflow-x-auto">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            {columns.map((col: string) => <TableHead key={col}>{col.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</TableHead>)}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {previewRows.map((row: any, index: number) => (
-                            <TableRow key={index}>
-                               {columns.map((col: string) => <TableCell key={col}>{String(row[col] ?? '')}</TableCell>)}
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
-        )
-    }
-
-    // Fallback for any other JSON structure
+    // Always show the raw JSON response as requested
     return (
         <pre className="p-4 bg-muted rounded-md text-sm overflow-x-auto">
             {JSON.stringify(file.processedData, null, 2)}
