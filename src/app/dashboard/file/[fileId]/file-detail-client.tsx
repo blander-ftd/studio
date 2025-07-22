@@ -36,25 +36,31 @@ export default function FileDetailClient({ file }: { file: any }) {
         return <p className="text-muted-foreground">Aún no hay datos procesados para este archivo.</p>
     }
 
-    if (Array.isArray(file.processedData.preview) && file.processedData.columns) {
+    // Dynamically get columns from the first data object if not explicitly provided
+    const columns = file.processedData.columns || (file.processedData.preview && file.processedData.preview.length > 0 ? Object.keys(file.processedData.preview[0]) : []);
+
+    if (Array.isArray(file.processedData.preview) && columns.length > 0) {
         return (
-             <Table>
-                <TableHeader>
-                    <TableRow>
-                        {file.processedData.columns.map((col: string) => <TableHead key={col}>{col}</TableHead>)}
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {file.processedData.preview.map((row: any, index: number) => (
-                        <TableRow key={index}>
-                           {file.processedData.columns.map((col: string) => <TableCell key={col}>{row[col]}</TableCell>)}
+             <div className="overflow-x-auto">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            {columns.map((col: string) => <TableHead key={col}>{col}</TableHead>)}
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {file.processedData.preview.map((row: any, index: number) => (
+                            <TableRow key={index}>
+                               {columns.map((col: string) => <TableCell key={col}>{row[col]}</TableCell>)}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
         )
     }
 
+    // Fallback for non-tabular or empty data
     return (
         <pre className="p-4 bg-muted rounded-md text-sm overflow-x-auto">
             {JSON.stringify(file.processedData, null, 2)}
