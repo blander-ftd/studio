@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import type { UploadedFile } from "@/types";
 
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return "0 Bytes";
@@ -17,7 +18,7 @@ function formatBytes(bytes: number, decimals = 2) {
 }
 
 
-export default function FileDetailClient({ file }: { file: any }) {
+export default function FileDetailClient({ file }: { file: UploadedFile | null }) {
 
   if (!file) {
     return (
@@ -36,10 +37,13 @@ export default function FileDetailClient({ file }: { file: any }) {
         return <p className="text-muted-foreground">Aún no hay datos procesados para este archivo.</p>
     }
 
-    // Dynamically get columns from the first data object if not explicitly provided
-    const columns = file.processedData.columns || (file.processedData.preview && file.processedData.preview.length > 0 ? Object.keys(file.processedData.preview[0]) : []);
+    // Check for a table-like structure
+    const isTable = file.processedData.columns && Array.isArray(file.processedData.preview) && file.processedData.preview.length > 0;
 
-    if (Array.isArray(file.processedData.preview) && columns.length > 0) {
+    if (isTable) {
+        const columns = file.processedData.columns;
+        const previewRows = file.processedData.preview;
+
         return (
              <div className="overflow-x-auto">
                 <Table>
@@ -49,7 +53,7 @@ export default function FileDetailClient({ file }: { file: any }) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {file.processedData.preview.map((row: any, index: number) => (
+                        {previewRows.map((row: any, index: number) => (
                             <TableRow key={index}>
                                {columns.map((col: string) => <TableCell key={col}>{String(row[col] ?? '')}</TableCell>)}
                             </TableRow>
@@ -60,7 +64,7 @@ export default function FileDetailClient({ file }: { file: any }) {
         )
     }
 
-    // Fallback for non-tabular or empty data
+    // Fallback for any other JSON structure
     return (
         <pre className="p-4 bg-muted rounded-md text-sm overflow-x-auto">
             {JSON.stringify(file.processedData, null, 2)}
@@ -103,7 +107,7 @@ export default function FileDetailClient({ file }: { file: any }) {
                     <span className="font-medium">{new Date(file.uploadDate).toLocaleDateString()}</span>
                 </CardContent>
             </Card>
-            {file.processedData && (
+            {file.processedData && file.processedData.summary && file.processedData.rowCount && (
                 <Card className="lg:col-span-2">
                     <CardHeader>
                         <CardTitle>Resumen del Procesamiento</CardTitle>
@@ -120,9 +124,9 @@ export default function FileDetailClient({ file }: { file: any }) {
         </div>
         <Card>
             <CardHeader>
-                <CardTitle>Vista Previa de Datos</CardTitle>
+                <CardTitle>Datos Procesados</CardTitle>
                 <CardDescription>
-                    Una muestra de los datos extraídos del archivo.
+                   Visualización de los datos extraídos del archivo.
                 </CardDescription>
             </CardHeader>
             <CardContent>
