@@ -88,12 +88,14 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
                             <span className="sr-only">Reintentar</span>
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/dashboard/file/${file.id}`}>
-                          <Eye className="h-4 w-4" />
-                          <span className="sr-only">Ver</span>
-                        </Link>
-                      </Button>
+                      {file.status !== "Error" && (
+                        <Button variant="ghost" size="icon" asChild>
+                            <Link href={`/dashboard/file/${file.id}`}>
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">Ver</span>
+                            </Link>
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => onRemoveFile(file.id)}>
                         <X className="h-4 w-4" />
                         <span className="sr-only">Eliminar</span>
