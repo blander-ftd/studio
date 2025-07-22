@@ -37,7 +37,7 @@ export default function DashboardLayout({
           <div className="flex h-20 items-center border-b border-sidebar-border px-4">
             <Link href="#" className="flex items-center gap-2 font-semibold text-sidebar-foreground">
               <FileCatalystLogo className="h-12 w-12" />
-              <span className="text-base">Portal de Aliados Comerciales</span>
+              <span className="text-base">Portal de Aliados Comerciales ARG</span>
             </Link>
           </div>
           <div className="flex-1 overflow-auto py-2">
@@ -80,7 +80,7 @@ export default function DashboardLayout({
                   className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
                 >
                   <FileCatalystLogo className="h-8 w-8 transition-all group-hover:scale-110" />
-                  <span className="sr-only">Portal de Aliados Comerciales</span>
+                  <span className="sr-only">Portal de Aliados Comerciales ARG</span>
                 </Link>
                 <Link
                   href="#"
