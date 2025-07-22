@@ -9,7 +9,7 @@ import { UploadCloud, File as FileIcon, X } from "lucide-react";
 import type { UploadedFile } from "@/types";
 
 interface FileUploaderProps {
-  onUploadComplete: (file: Omit<UploadedFile, 'status' | 'processedData' | 'icon'>) => void;
+  onUploadComplete: (files: (Omit<UploadedFile, 'status' | 'processedData' | 'icon'> & { file: File })[]) => void;
 }
 
 interface UploadingFile {
@@ -51,39 +51,50 @@ export function FileUploader({ onUploadComplete }: FileUploaderProps) {
 
       setUploadingFiles(prev => [...prev, ...newUploads]);
 
-      newUploads.forEach(upload => {
-        // Simulate upload progress
-        const interval = setInterval(() => {
-          setUploadingFiles(prev =>
-            prev.map(f => {
-              if (f.id === upload.id) {
-                const newProgress = f.progress + 10;
-                if (newProgress >= 100) {
-                  clearInterval(interval);
-                  // Use a short timeout to allow the 100% progress to be seen
-                  // before the file is passed to the parent for processing.
-                  setTimeout(() => {
-                    const fileType = f.file.type === 'application/pdf' ? 'PDF' : 'Excel';
-                    onUploadComplete({
-                        id: f.id,
-                        name: f.file.name,
-                        size: f.file.size,
-                        type: fileType,
-                        uploadDate: new Date(),
-                        file: f.file, // Pass the actual file
-                    });
-                    // Remove from the local uploading state
-                    setUploadingFiles(current => current.filter(uf => uf.id !== f.id));
-                  }, 500);
-                  return { ...f, progress: 100 };
-                }
-                return { ...f, progress: newProgress };
-              }
-              return f;
-            })
-          );
-        }, 100);
-      });
+      const uploadsToComplete: (Omit<UploadedFile, 'status' | 'processedData' | 'icon'> & { file: File })[] = [];
+
+      const simulateUpload = (upload: UploadingFile) => {
+          const interval = setInterval(() => {
+            setUploadingFiles(prev =>
+                prev.map(f => {
+                    if (f.id === upload.id) {
+                        const newProgress = f.progress + 10;
+                        if (newProgress >= 100) {
+                            clearInterval(interval);
+                            
+                            // Use a short timeout to allow the 100% progress to be seen
+                            setTimeout(() => {
+                                // Mark as ready to be passed to parent
+                                const fileType = f.file.type === 'application/pdf' ? 'PDF' : 'Excel';
+                                uploadsToComplete.push({
+                                    id: f.id,
+                                    name: f.file.name,
+                                    size: f.file.size,
+                                    type: fileType,
+                                    uploadDate: new Date(),
+                                    file: f.file,
+                                });
+
+                                // Remove from the local uploading state
+                                setUploadingFiles(current => current.filter(uf => uf.id !== f.id));
+
+                                // If all files are done, call the parent callback
+                                if (uploadsToComplete.length === newUploads.length) {
+                                    onUploadComplete(uploadsToComplete);
+                                }
+                            }, 500);
+
+                            return { ...f, progress: 100 };
+                        }
+                        return { ...f, progress: newProgress };
+                    }
+                    return f;
+                })
+            );
+          }, 100);
+      };
+
+      newUploads.forEach(simulateUpload);
     },
     [onUploadComplete, toast]
   );
@@ -107,6 +118,10 @@ export function FileUploader({ onUploadComplete }: FileUploaderProps) {
   const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       handleFiles(Array.from(e.target.files));
+    }
+    // Reset file input to allow selecting the same file again
+    if(fileInputRef.current) {
+        fileInputRef.current.value = "";
     }
   };
 

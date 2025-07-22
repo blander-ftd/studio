@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [processingQueue, setProcessingQueue] = useState<string[]>([]);
+  const [processingQueue, setProcessingQueue] = useState<UploadedFile[]>([]);
   const isProcessing = useRef(false);
   const { toast } = useToast();
 
@@ -19,14 +19,20 @@ export default function DashboardPage() {
       if (isProcessing.current || processingQueue.length === 0) {
         return;
       }
-      
-      isProcessing.current = true;
-      const fileIdToProcess = processingQueue[0];
-      const fileToProcess = files.find(f => f.id === fileIdToProcess);
 
-      if (fileToProcess) {
-        await processFile(fileToProcess);
-      }
+      isProcessing.current = true;
+      const fileToProcess = processingQueue[0];
+
+      // Set status to 'Procesando' as soon as it's picked from the queue
+      setFiles((prevFiles) =>
+        prevFiles.map((f) =>
+          f.id === fileToProcess.id
+            ? { ...f, status: "Procesando" }
+            : f
+        )
+      );
+      
+      await processFile(fileToProcess);
       
       // Remove the processed file from the queue and allow the next one to start
       setProcessingQueue(prev => prev.slice(1));
@@ -38,15 +44,6 @@ export default function DashboardPage() {
 
 
   const processFile = async (fileToProcess: UploadedFile) => {
-    // Set status to 'Procesando'
-    setFiles((prevFiles) =>
-      prevFiles.map((f) =>
-        f.id === fileToProcess.id
-          ? { ...f, status: "Procesando" }
-          : f
-      )
-    );
-
     try {
       const fileData = await new Promise<string | ArrayBuffer | null>((resolve, reject) => {
         const reader = new FileReader();
@@ -76,7 +73,7 @@ export default function DashboardPage() {
             errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
         } else {
             const errorText = await response.text();
-            if (!errorText.trim().startsWith("<!DOCTYPE html") && !errorText.trim().startsWith("<html")) {
+            if (errorText && !errorText.trim().startsWith("<!DOCTYPE html") && !errorText.trim().startsWith("<html")) {
                  errorMessage = errorText;
             }
         }
@@ -119,40 +116,41 @@ export default function DashboardPage() {
   };
 
 
-  const handleUploadComplete = async (
-    newFile: Omit<UploadedFile, "status" | "processedData" | "file"> & { file: File }
+  const handleUploadComplete = (
+    newFiles: (Omit<UploadedFile, "status" | "processedData" | "file"> & { file: File })[]
   ) => {
-    const fileWithStatus: UploadedFile = {
-      ...newFile,
-      status: "Procesando", // Start as processing, but will be queued
-      processedData: null,
-    };
-
-    if (fileWithStatus.type === "PDF") {
-      fileWithStatus.icon = <FileText className="h-6 w-6 text-destructive" />;
-    } else {
-      fileWithStatus.icon = (
-        <FileSpreadsheet className="h-6 w-6 text-green-500" />
-      );
-    }
+    const filesWithStatus: UploadedFile[] = newFiles.map(newFile => {
+       const fileType = newFile.file.type === 'application/pdf' ? 'PDF' : 'Excel';
+       const icon = fileType === 'PDF' 
+         ? <FileText className="h-6 w-6 text-destructive" />
+         : <FileSpreadsheet className="h-6 w-6 text-green-500" />;
+       
+       return {
+          ...newFile,
+          type: fileType,
+          status: "Procesando", // Will be queued, but this is the initial visible state
+          processedData: null,
+          icon: icon,
+       }
+    });
     
     // Add to main file list first
-    setFiles(prevFiles => [fileWithStatus, ...prevFiles]);
+    setFiles(prevFiles => [...filesWithStatus, ...prevFiles]);
     // Then add to processing queue
-    setProcessingQueue(prev => [...prev, fileWithStatus.id]);
+    setProcessingQueue(prev => [...prev, ...filesWithStatus]);
   };
 
   const handleRetryProcess = (fileId: string) => {
     const fileToRetry = files.find(f => f.id === fileId);
     if (fileToRetry) {
       // Add to the end of the queue
-      setProcessingQueue(prev => [...prev, fileId]);
+      setProcessingQueue(prev => [...prev, fileToRetry]);
     }
   };
 
   const handleRemoveFile = (fileId: string) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
-    setProcessingQueue((prevQueue) => prevQueue.filter((id) => id !== fileId));
+    setProcessingQueue((prevQueue) => prevQueue.filter((f) => f.id !== fileId));
   };
 
   return (
