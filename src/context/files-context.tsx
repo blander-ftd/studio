@@ -121,11 +121,14 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
       isProcessing.current = false;
     };
     
-    processNextFile();
+    // Using setTimeout to avoid rapid state changes that might cause issues.
+    const timeoutId = setTimeout(processNextFile, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [files, processFile]);
 
   const handleUploadComplete = useCallback((
-    uploadedFiles: (Omit<UploadedFile, "status" | "processedData" | "file"> & { file: File })[]
+    uploadedFiles: (Omit<UploadedFile, "status" | "processedData" | "file" | "icon"> & { file: File })[]
   ) => {
     const filesWithStatus: UploadedFile[] = uploadedFiles.map(newFile => {
        const fileType = newFile.file.type === 'application/pdf' ? 'PDF' : 'Excel';
