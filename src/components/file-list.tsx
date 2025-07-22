@@ -33,6 +33,18 @@ function formatBytes(bytes: number, decimals = 2) {
 }
 
 export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps) {
+
+  const handleViewClick = (file: UploadedFile) => {
+    // Stringify file object to store in sessionStorage, excluding the raw 'file' property
+    const { file: rawFile, ...fileToStore } = file;
+    try {
+      sessionStorage.setItem('selectedFile', JSON.stringify(fileToStore));
+    } catch (error) {
+      console.error("Could not save file to sessionStorage", error);
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -65,7 +77,7 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
                   <TableCell className="font-medium">{file.name}</TableCell>
                   <TableCell>{formatBytes(file.size)}</TableCell>
                   <TableCell>
-                    {file.uploadDate.toLocaleDateString()}
+                    {new Date(file.uploadDate).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
                     <Badge 
@@ -90,7 +102,7 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
                         </Button>
                       )}
                       {file.status === "Procesado" && (
-                        <Button variant="ghost" size="icon" asChild>
+                        <Button variant="ghost" size="icon" asChild onClick={() => handleViewClick(file)}>
                             <Link href={`/dashboard/file/${file.id}`}>
                             <Eye className="h-4 w-4" />
                             <span className="sr-only">Ver</span>

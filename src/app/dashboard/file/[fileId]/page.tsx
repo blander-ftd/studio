@@ -1,40 +1,41 @@
-import { Suspense } from "react";
+
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
 import FileDetailClient from "./file-detail-client";
+import type { UploadedFile } from "@/types";
 
-// This is a placeholder for where you might get the file data.
-// In a real app, you'd fetch this from your state management solution or an API route
-// based on the fileId. For this prototype, we'll use mock data.
-const getFileById = (fileId: string) => {
-    // In a real implementation, you would look up the file from your state.
-    // Since we can't easily share state across pages without a library,
-    // we'll return some mock data.
-    // NOTE: The structure of this mock data MUST match the `UploadedFile` type.
-    // In a real app, this data would be live.
-    return {
-        id: fileId,
-        name: "Datos_de_Ventas_Abril.xlsx",
-        size: 54823,
-        type: "Excel",
-        uploadDate: new Date(),
-        status: "Procesado",
-        processedData: {
-            summary: "Resumen de ventas de Abril.",
-            rowCount: 150,
-            columns: ["ID Producto", "Nombre", "Cantidad", "Precio Unitario", "Total"],
-            preview: [
-                { "ID Producto": "P001", "Nombre": "Producto A", "Cantidad": 10, "Precio Unitario": 25.50, "Total": 255.00 },
-                { "ID Producto": "P002", "Nombre": "Producto B", "Cantidad": 5, "Precio Unitario": 120.00, "Total": 600.00 },
-                { "ID Producto": "P003", "Nombre": "Producto C", "Cantidad": 20, "Precio Unitario": 15.75, "Total": 315.00 },
-            ]
-        }
-    }
-}
-
-
+// This component is now a client component to access sessionStorage
 export default function FileDetailPage({ params }: { params: { fileId: string } }) {
-  // In a real app, you would fetch file data based on the ID.
-  // For this example, we pass the mock data directly.
-  const file = getFileById(params.fileId);
+  const [file, setFile] = useState<UploadedFile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    try {
+      const storedFileJson = sessionStorage.getItem('selectedFile');
+      if (storedFileJson) {
+        const storedFile = JSON.parse(storedFileJson);
+        // We only show the details if the ID from the URL matches the one in storage
+        if (storedFile.id === params.fileId) {
+            // We need to convert date strings back to Date objects
+            const hydratedFile = {
+                ...storedFile,
+                uploadDate: new Date(storedFile.uploadDate),
+            };
+            setFile(hydratedFile);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to parse file data from sessionStorage", error);
+      setFile(null);
+    } finally {
+        setLoading(false);
+    }
+  }, [params.fileId]);
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
   
   return (
     <Suspense fallback={<div>Loading...</div>}>
