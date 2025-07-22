@@ -15,39 +15,54 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const processNextFile = async () => {
+      // If a file is already being processed, do nothing.
       if (isProcessing.current) {
         return;
       }
       
+      // Find the first file that is 'Pendiente' (Pending).
       const fileToProcess = files.find(f => f.status === "Pendiente");
       
+      // If no file needs processing, we're done.
       if (!fileToProcess) {
         return;
       }
 
+      // Set the flag to indicate processing has started.
       isProcessing.current = true;
 
-      // Set status to 'Procesando'
+      // Update the file's status to 'Procesando' in the UI.
       setFiles((prevFiles) =>
         prevFiles.map((f) =>
           f.id === fileToProcess.id ? { ...f, status: "Procesando" } : f
         )
       );
 
+      // Call the actual processing function.
       await processFile(fileToProcess);
 
+      // Reset the flag so the next file can be processed.
       isProcessing.current = false;
     };
     
+    // This effect runs whenever the `files` array changes.
     processNextFile();
   }, [files]);
 
 
   const processFile = async (fileToProcess: UploadedFile) => {
     try {
-      const fileData = await new Promise<string | ArrayBuffer | null>((resolve, reject) => {
+      // Convert file to base64 for the API request
+      const fileData = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (event) => resolve(event.target?.result);
+        reader.onload = (event) => {
+            const result = event.target?.result;
+            if (typeof result === 'string') {
+                resolve(result);
+            } else {
+                reject(new Error("Failed to read file as data URL"));
+            }
+        };
         reader.onerror = (error) => reject(error);
         reader.readAsDataURL(fileToProcess.file);
       });
@@ -73,10 +88,11 @@ export default function DashboardPage() {
             errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
         } else {
             const errorText = await response.text();
-            if (errorText && !errorText.trim().startsWith("<!DOCTYPE html") && !errorText.trim().startsWith("<html")) {
+            // Check if the response is likely HTML, and if so, show a generic message.
+            if (errorText && (errorText.trim().startsWith("<!DOCTYPE html") || errorText.trim().startsWith("<html"))) {
+                errorMessage = "El servidor devolvió un error inesperado. Por favor, intente de nuevo.";
+            } else if (errorText) {
                  errorMessage = errorText;
-            } else {
-              errorMessage = "El servidor devolvió un error inesperado."
             }
         }
         throw new Error(errorMessage);
@@ -114,9 +130,9 @@ export default function DashboardPage() {
 
 
   const handleUploadComplete = (
-    newFiles: (Omit<UploadedFile, "status" | "processedData" | "file"> & { file: File })[]
+    uploadedFiles: (Omit<UploadedFile, "status" | "processedData" | "file"> & { file: File })[]
   ) => {
-    const filesWithStatus: UploadedFile[] = newFiles.map(newFile => {
+    const filesWithStatus: UploadedFile[] = uploadedFiles.map(newFile => {
        const fileType = newFile.file.type === 'application/pdf' ? 'PDF' : 'Excel';
        const icon = fileType === 'PDF' 
          ? <FileText className="h-6 w-6 text-destructive" />
@@ -131,7 +147,11 @@ export default function DashboardPage() {
        }
     });
     
-    setFiles(prevFiles => [...filesWithStatus, ...prevFiles]);
+    setFiles(prevFiles => {
+        const existingIds = new Set(prevFiles.map(f => f.id));
+        const newUniqueFiles = filesWithStatus.filter(f => !existingIds.has(f.id));
+        return [...newUniqueFiles, ...prevFiles];
+    });
   };
 
   const handleRetryProcess = (fileId: string) => {
