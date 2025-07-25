@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Eye, Loader2, RefreshCw } from "lucide-react";
+import { X, Eye, Loader2, RefreshCw, FileSpreadsheet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -52,7 +52,10 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
             <CardTitle>Archivos Cargados</CardTitle>
             <CardDescription>Una lista de sus archivos cargados recientemente.</CardDescription>
         </div>
-        <Button>Hacer Excel</Button>
+        <Button>
+            <FileSpreadsheet />
+            Hacer Excel
+        </Button>
       </CardHeader>
       <CardContent>
         <Table>
