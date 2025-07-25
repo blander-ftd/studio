@@ -52,6 +52,7 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
             <CardTitle>Archivos Cargados</CardTitle>
             <CardDescription>Una lista de sus archivos cargados recientemente.</CardDescription>
         </div>
+        <Button>Hacer Excel</Button>
       </CardHeader>
       <CardContent>
         <Table>
