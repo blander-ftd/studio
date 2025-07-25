@@ -23,14 +23,14 @@ const initialUsers: User[] = [
     id: "2",
     name: "Jane Smith",
     email: "jane@example.com",
-    role: "Editor",
+    role: "Usuario",
     status: "Active",
   },
   {
     id: "3",
     name: "Sam Wilson",
     email: "sam@example.com",
-    role: "Viewer",
+    role: "Proveedor",
     status: "Inactive",
   },
 ];

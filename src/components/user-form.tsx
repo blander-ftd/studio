@@ -35,7 +35,7 @@ const userSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
   email: z.string().email("Por favor ingrese un email válido."),
-  role: z.enum(["Admin", "Editor", "Viewer"], {
+  role: z.enum(["Admin", "Usuario", "Proveedor"], {
     required_error: "Por favor seleccione un rol.",
   }),
   status: z.string().optional(),
@@ -129,8 +129,8 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="Admin">Admin</SelectItem>
-                      <SelectItem value="Editor">Editor</SelectItem>
-                      <SelectItem value="Viewer">Viewer</SelectItem>
+                      <SelectItem value="Usuario">Usuario</SelectItem>
+                      <SelectItem value="Proveedor">Proveedor</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
