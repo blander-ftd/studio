@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FileCatalystLogo } from "@/components/icons";
-import { Home, PanelLeft, Users } from "lucide-react";
+import { Sparkles, PanelLeft, Users } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { FilesProvider } from "@/context/files-context";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/dashboard", icon: Home, label: "Inicio" },
+    { href: "/dashboard", icon: Sparkles, label: "Procesador de Archivos" },
     { href: "/dashboard/users", icon: Users, label: "Usuarios" },
   ];
 
