@@ -44,6 +44,14 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
     }
   };
 
+  const isProcessing = files.some(file => file.status === 'Procesando' || file.status === 'Pendiente');
+  const hasProcessedFiles = files.some(file => file.status === 'Procesado');
+  const isButtonDisabled = !hasProcessedFiles || isProcessing;
+
+  const handleMakeExcel = () => {
+    // Placeholder for excel generation logic
+    console.log("Generando Excel con los siguientes archivos:", files.filter(f => f.status === 'Procesado'));
+  }
 
   return (
     <Card>
@@ -52,7 +60,7 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
             <CardTitle>Archivos Cargados</CardTitle>
             <CardDescription>Una lista de sus archivos cargados recientemente.</CardDescription>
         </div>
-        <Button>
+        <Button onClick={handleMakeExcel} disabled={isButtonDisabled}>
             <FileSpreadsheet />
             Hacer Excel
         </Button>
