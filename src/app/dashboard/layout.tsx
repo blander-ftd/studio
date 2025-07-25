@@ -2,18 +2,27 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FileCatalystLogo } from "@/components/icons";
-import { Home, PanelLeft } from "lucide-react";
+import { Home, PanelLeft, Users } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { FilesProvider } from "@/context/files-context";
+import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  const navItems = [
+    { href: "/dashboard", icon: Home, label: "Inicio" },
+    { href: "/dashboard/users", icon: Users, label: "Usuarios" },
+  ];
+
   return (
     <FilesProvider>
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -27,13 +36,19 @@ export default function DashboardLayout({
             </div>
             <div className="flex-1 overflow-auto py-2">
               <nav className="grid items-start px-4 text-sm font-medium">
-                <Link
-                  href="/dashboard"
-                  className="flex items-center gap-3 rounded-lg bg-sidebar-accent px-3 py-2 text-sidebar-accent-foreground transition-all hover:text-primary"
-                >
-                  <Home className="h-4 w-4" />
-                  Inicio
-                </Link>
+                {navItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        pathname === item.href ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                ))}
               </nav>
             </div>
             <div className="mt-auto p-4">
@@ -67,13 +82,19 @@ export default function DashboardLayout({
                     <FileCatalystLogo className="h-8 w-8 transition-all group-hover:scale-110" />
                     <span className="sr-only">Portal de Aliados Comerciales ARG</span>
                   </Link>
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                  >
-                    <Home className="h-5 w-5" />
-                    Inicio
-                  </Link>
+                   {navItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                          "flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground",
+                           pathname === item.href ? "text-foreground" : ""
+                      )}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.label}
+                    </Link>
+                  ))}
                 </nav>
               </SheetContent>
             </Sheet>
