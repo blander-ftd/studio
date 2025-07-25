@@ -1,0 +1,151 @@
+
+"use client";
+
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const userSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
+  email: z.string().email("Por favor ingrese un email válido."),
+  role: z.enum(["Admin", "Editor", "Viewer"], {
+    required_error: "Por favor seleccione un rol.",
+  }),
+  status: z.string().optional(),
+});
+
+export type User = z.infer<typeof userSchema>;
+
+interface UserFormProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (user: User) => void;
+  user: User | null;
+}
+
+export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) {
+  const form = useForm<User>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      role: undefined,
+    },
+  });
+
+  useEffect(() => {
+    if (user) {
+      form.reset(user);
+    } else {
+      form.reset({
+        name: "",
+        email: "",
+        role: undefined,
+      });
+    }
+  }, [user, form, isOpen]);
+
+  const onSubmit = (data: User) => {
+    onSave({ ...user, ...data });
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{user ? "Editar Usuario" : "Agregar Usuario"}</DialogTitle>
+          <DialogDescription>
+            {user
+              ? "Edite los detalles del usuario a continuación."
+              : "Complete el formulario para agregar un nuevo usuario."}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="john@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rol</FormLabel>
+                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccione un rol" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Editor">Editor</SelectItem>
+                      <SelectItem value="Viewer">Viewer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Guardar</Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
