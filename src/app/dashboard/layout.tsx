@@ -3,25 +3,56 @@
 
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FileCatalystLogo } from "@/components/icons";
-import { Sparkles, PanelLeft, Users } from "lucide-react";
+import { Sparkles, PanelLeft, Users, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { FilesProvider } from "@/context/files-context";
+import { AuthProvider, useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function RoleSwitcher() {
+    const { user, setUserRole } = useAuth();
+    
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-auto p-0 gap-1">
+                    <div className="text-left">
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Cambiar Rol</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setUserRole('Admin')}>Admin</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setUserRole('Usuario')}>Usuario</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setUserRole('Proveedor')}>Proveedor</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
+
+
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const navItems = [
-    { href: "/dashboard", icon: Sparkles, label: "Procesador de Archivos" },
-    { href: "/dashboard/users", icon: Users, label: "Usuarios" },
-  ];
+    { href: "/dashboard", icon: Sparkles, label: "Procesador de Archivos", role: ['Admin', 'Usuario', 'Proveedor'] },
+    { href: "/dashboard/users", icon: Users, label: "Usuarios", role: ['Admin', 'Usuario'] },
+  ].filter(item => item.role.includes(user.role));
 
   return (
     <FilesProvider>
@@ -53,13 +84,7 @@ export default function DashboardLayout({
             </div>
             <div className="mt-auto p-4">
               <div className="flex items-center gap-2">
-                <Avatar className="h-9 w-9">
-                  <AvatarFallback>N</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium leading-none">John Pilot</p>
-                  <p className="text-xs leading-none text-muted-foreground">john@filecatalyst.com</p>
-                </div>
+                 <RoleSwitcher />
               </div>
             </div>
           </nav>
@@ -104,4 +129,17 @@ export default function DashboardLayout({
       </div>
     </FilesProvider>
   );
+}
+
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+    return (
+        <AuthProvider>
+            <DashboardLayoutContent>{children}</DashboardLayoutContent>
+        </AuthProvider>
+    )
 }

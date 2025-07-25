@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { UserForm, User } from "@/components/user-form";
+import { useAuth } from "@/context/auth-context";
 
 // Mock user data for demonstration
 const initialUsers: User[] = [
@@ -36,9 +37,12 @@ const initialUsers: User[] = [
 ];
 
 export default function UsersPage() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  const isAdmin = currentUser.role === 'Admin';
 
   const handleAddUser = () => {
     setEditingUser(null);
@@ -73,7 +77,7 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold font-headline tracking-tight">
             Usuarios
           </h1>
-          <Button onClick={handleAddUser}>Agregar Usuario</Button>
+          {isAdmin && <Button onClick={handleAddUser}>Agregar Usuario</Button>}
         </div>
         <Card>
             <CardHeader>
@@ -88,9 +92,11 @@ export default function UsersPage() {
                             <TableHead>Email</TableHead>
                             <TableHead>Rol</TableHead>
                             <TableHead>Estado</TableHead>
-                            <TableHead>
-                                <span className="sr-only">Acciones</span>
-                            </TableHead>
+                            {isAdmin && (
+                                <TableHead>
+                                    <span className="sr-only">Acciones</span>
+                                </TableHead>
+                            )}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -104,33 +110,35 @@ export default function UsersPage() {
                                         {user.status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                                <span className="sr-only">Alternar menú</span>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                            <DropdownMenuItem onClick={() => handleEditUser(user)}>Editar</DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleDeleteUser(user.id!)}>Eliminar</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
+                                {isAdmin && (
+                                    <TableCell>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                    <span className="sr-only">Alternar menú</span>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                                <DropdownMenuItem onClick={() => handleEditUser(user)}>Editar</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleDeleteUser(user.id!)}>Eliminar</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </CardContent>
         </Card>
-        <UserForm 
+        {isAdmin && <UserForm 
             isOpen={isFormOpen}
             onOpenChange={setIsFormOpen}
             onSave={handleSaveUser}
             user={editingUser}
-        />
+        />}
     </div>
   )
 }

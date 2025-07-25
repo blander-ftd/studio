@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { X, Eye, Loader2, RefreshCw, FileSpreadsheet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useAuth } from "@/context/auth-context";
 
 interface FileListProps {
   files: UploadedFile[];
@@ -33,6 +34,8 @@ function formatBytes(bytes: number, decimals = 2) {
 }
 
 export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps) {
+  const { user } = useAuth();
+  const canMakeExcel = user.role !== 'Proveedor';
 
   const handleViewClick = (file: UploadedFile) => {
     // Stringify file object to store in sessionStorage, excluding the raw 'file' property
@@ -60,10 +63,12 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
             <CardTitle>Archivos Cargados</CardTitle>
             <CardDescription>Una lista de sus archivos cargados recientemente.</CardDescription>
         </div>
-        <Button onClick={handleMakeExcel} disabled={isButtonDisabled}>
-            <FileSpreadsheet />
-            Hacer Excel
-        </Button>
+        {canMakeExcel && (
+            <Button onClick={handleMakeExcel} disabled={isButtonDisabled}>
+                <FileSpreadsheet />
+                Hacer Excel
+            </Button>
+        )}
       </CardHeader>
       <CardContent>
         <Table>
