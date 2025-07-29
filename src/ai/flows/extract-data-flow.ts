@@ -55,6 +55,8 @@ const extractDataPrompt = ai.definePrompt({
   ]
 }
 
+The file is provided as a binary blob. Analyze its content to determine if it is a PDF or an Excel file and extract the data accordingly.
+
 Follow these extraction rules:
 1. **UPC**: Prioritize EAN/EAN13 values > UPC codes > Internal codes (such as EAN or an internal SKU) > Parse from description
 2. **Nombre fabricante**: Use 'Fabricante'/'Marca'/'MARCA'/'Línea'/'Proveedor' columns (e.g., ESPADOL, VEET, Dove)
@@ -82,7 +84,17 @@ const extractDataFlow = ai.defineFlow(
     outputSchema: ExtractDataOutputSchema,
   },
   async (input) => {
-    const { output } = await extractDataPrompt(input);
+    // Override the MIME type to a generic one to bypass model validation
+    const sanitizedFileDataUri = input.fileDataUri.replace(
+        /^data:application\/vnd\.(ms-excel|openxmlformats-officedocument\.spreadsheetml\.sheet)/,
+        'data:application/octet-stream'
+    );
+
+    const { output } = await extractDataPrompt({
+        ...input,
+        fileDataUri: sanitizedFileDataUri,
+    });
+
     if (!output) {
       return { products: [] };
     }
