@@ -69,7 +69,7 @@ Handle data quirks:
 - Convert currency strings to numbers (e.g., "$1,500" → 1500)
 - Null values when data is missing
 
-Return only valid JSON output with no additional text.
+Return only valid JSON output with no additional text. Do not include empty objects in the products array.
 
 File ({{fileType}}): {{media url=fileDataUri}}
 `,
@@ -83,6 +83,15 @@ const extractDataFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await extractDataPrompt(input);
-    return output!;
+    if (!output) {
+      return { products: [] };
+    }
+    
+    // Filter out any products that are missing required fields
+    const validProducts = output.products.filter(product => {
+        return product.UPC && product["Nombre fabricante"];
+    });
+
+    return { products: validProducts };
   }
 );
