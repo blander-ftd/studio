@@ -9,14 +9,16 @@ import type { UploadedFile } from "@/types";
 export default function FileDetailPage({ params }: { params: { fileId: string } }) {
   const [file, setFile] = useState<UploadedFile | null>(null);
   const [loading, setLoading] = useState(true);
+  const { fileId } = params;
 
   useEffect(() => {
     try {
-      const storedFileJson = sessionStorage.getItem('selectedFile');
+      // Use a unique key for each file to avoid conflicts in sessionStorage
+      const storedFileJson = sessionStorage.getItem(`selectedFile_${fileId}`);
       if (storedFileJson) {
         const storedFile = JSON.parse(storedFileJson);
         // We only show the details if the ID from the URL matches the one in storage
-        if (storedFile.id === params.fileId) {
+        if (storedFile.id === fileId) {
             // We need to convert date strings back to Date objects
             const hydratedFile = {
                 ...storedFile,
@@ -31,7 +33,7 @@ export default function FileDetailPage({ params }: { params: { fileId: string } 
     } finally {
         setLoading(false);
     }
-  }, [params.fileId]);
+  }, [fileId]);
   
   if (loading) {
     return <div>Loading...</div>;

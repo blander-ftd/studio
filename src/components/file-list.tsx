@@ -41,7 +41,7 @@ export function FileList({ files, onRemoveFile, onRetryProcess }: FileListProps)
     // Stringify file object to store in sessionStorage, excluding the raw 'file' property
     const { file: rawFile, ...fileToStore } = file;
     try {
-      sessionStorage.setItem('selectedFile', JSON.stringify(fileToStore));
+      sessionStorage.setItem(`selectedFile_${file.id}`, JSON.stringify(fileToStore));
     } catch (error) {
       console.error("Could not save file to sessionStorage", error);
     }
