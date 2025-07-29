@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, Re
 import type { UploadedFile } from "@/types";
 import { FileSpreadsheet, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { extractData } from "@/ai/flows/extract-data-flow";
 
 interface FilesContextType {
   files: UploadedFile[];
@@ -37,36 +38,11 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
       });
 
       const fileTypeForRequest = fileToProcess.type === 'PDF' ? 'pdf' : 'excel';
-
-      const response = await fetch("/api/process", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          type: fileTypeForRequest,
-          file: fileData 
-        }),
+      
+      const result = await extractData({
+          fileDataUri: fileData,
+          fileType: fileTypeForRequest
       });
-
-      if (!response.ok) {
-        const contentType = response.headers.get("content-type");
-        let errorMessage = `Error del servidor: ${response.statusText}`;
-        if (contentType && contentType.includes("application/json")) {
-            const errorJson = await response.json();
-            errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
-        } else {
-            const errorText = await response.text();
-            if (errorText && (errorText.trim().startsWith("<!DOCTYPE html") || errorText.trim().startsWith("<html"))) {
-                errorMessage = "El servidor devolvió un error inesperado. Por favor, intente de nuevo.";
-            } else if (errorText) {
-                 errorMessage = errorText;
-            }
-        }
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
 
       setFiles((prevFiles) =>
         prevFiles.map((f) =>
