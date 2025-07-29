@@ -105,7 +105,7 @@ const extractDataFlow = ai.defineFlow(
       return { products: [] };
     }
     
-    // Filter out any products that are missing required fields
+    // Filter out any products that are missing required fields or are empty objects
     const validProducts = output.products.filter(product => {
         return product.UPC && product["Nombre fabricante"];
     });
