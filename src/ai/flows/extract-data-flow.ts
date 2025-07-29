@@ -84,16 +84,7 @@ const extractDataFlow = ai.defineFlow(
     outputSchema: ExtractDataOutputSchema,
   },
   async (input) => {
-    // Override the MIME type to a generic one to bypass model validation
-    const sanitizedFileDataUri = input.fileDataUri.replace(
-        /^data:application\/vnd\.(ms-excel|openxmlformats-officedocument\.spreadsheetml\.sheet)/,
-        'data:application/octet-stream'
-    );
-
-    const { output } = await extractDataPrompt({
-        ...input,
-        fileDataUri: sanitizedFileDataUri,
-    });
+    const { output } = await extractDataPrompt(input);
 
     if (!output) {
       return { products: [] };
