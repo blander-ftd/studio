@@ -6,7 +6,7 @@ import FileDetailClient from "./file-detail-client";
 import type { UploadedFile } from "@/types";
 
 // This component is now a client component to access sessionStorage
-export default function FileDetailPage({ params }: { params: { fileId: string } }) {
+export default function FileDetailPage({ params: { fileId } }: { params: { fileId: string } }) {
   const [file, setFile] = useState<UploadedFile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -16,7 +16,7 @@ export default function FileDetailPage({ params }: { params: { fileId: string } 
       if (storedFileJson) {
         const storedFile = JSON.parse(storedFileJson);
         // We only show the details if the ID from the URL matches the one in storage
-        if (storedFile.id === params.fileId) {
+        if (storedFile.id === fileId) {
             // We need to convert date strings back to Date objects
             const hydratedFile = {
                 ...storedFile,
@@ -31,7 +31,7 @@ export default function FileDetailPage({ params }: { params: { fileId: string } 
     } finally {
         setLoading(false);
     }
-  }, [params.fileId]);
+  }, [fileId]);
   
   if (loading) {
     return <div>Loading...</div>;
