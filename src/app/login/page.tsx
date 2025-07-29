@@ -16,7 +16,7 @@ export default function LoginPage() {
             <FileCatalystLogo className="h-24 w-24 text-primary" />
             <CardTitle className="text-3xl font-bold">Portal de Aliados Comerciales</CardTitle>
           </div>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
+          <CardDescription>Ingresa tus credenciales para acceder</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
