@@ -10,6 +10,7 @@ import type { UploadedFile } from "@/types";
 
 interface FileUploaderProps {
   onUploadComplete: (files: (Omit<UploadedFile, 'status' | 'processedData' | 'icon'> & { file: File })[]) => void;
+  existingFiles: UploadedFile[];
 }
 
 interface UploadingFile {
@@ -24,23 +25,41 @@ const ACCEPTED_FILE_TYPES = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
 };
 
-export function FileUploader({ onUploadComplete }: FileUploaderProps) {
+export function FileUploader({ onUploadComplete, existingFiles }: FileUploaderProps) {
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = useCallback((files: File[]) => {
-      const validFiles = Array.from(files).filter(file =>
-        Object.keys(ACCEPTED_FILE_TYPES).includes(file.type)
-      );
+      const validFiles = Array.from(files).filter(file => {
+        if (!Object.keys(ACCEPTED_FILE_TYPES).includes(file.type)) {
+            toast({
+                title: "Tipo de archivo no válido",
+                description: `El archivo "${file.name}" no es soportado. Solo se permiten archivos Excel y PDF.`,
+                variant: "destructive",
+            });
+            return false;
+        }
+        
+        const isDuplicate = existingFiles.some(existingFile => 
+            existingFile.name === file.name && existingFile.size === file.size
+        );
+        
+        if (isDuplicate) {
+            toast({
+                title: "Archivo duplicado",
+                description: `El archivo "${file.name}" ya ha sido cargado.`,
+                variant: "destructive",
+            });
+            return false;
+        }
 
-      if (validFiles.length !== files.length) {
-        toast({
-          title: "Tipo de archivo no válido",
-          description: "Solo se permiten archivos de Excel (.xls, .xlsx) y PDF (.pdf).",
-          variant: "destructive",
-        });
+        return true;
+      });
+
+      if (!validFiles.length) {
+          return;
       }
 
       const newUploads: UploadingFile[] = validFiles.map(file => ({
@@ -96,7 +115,7 @@ export function FileUploader({ onUploadComplete }: FileUploaderProps) {
 
       newUploads.forEach(simulateUpload);
     },
-    [onUploadComplete, toast]
+    [onUploadComplete, toast, existingFiles]
   );
 
   const onDragEnter = (e: React.DragEvent<HTMLDivElement>) => {

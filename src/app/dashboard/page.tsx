@@ -23,7 +23,7 @@ export default function DashboardPage() {
             Procesador de Archivos
           </h1>
         </div>
-        <FileUploader onUploadComplete={handleUploadComplete} />
+        <FileUploader onUploadComplete={handleUploadComplete} existingFiles={files} />
         <FileList
           files={files}
           onRemoveFile={handleRemoveFile}
