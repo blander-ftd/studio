@@ -6,7 +6,8 @@ import FileDetailClient from "./file-detail-client";
 import type { UploadedFile } from "@/types";
 
 // This component is now a client component to access sessionStorage
-export default function FileDetailPage({ params: { fileId } }: { params: { fileId: string } }) {
+export default function FileDetailPage({ params }: { params: { fileId: string } }) {
+  const { fileId } = params;
   const [file, setFile] = useState<UploadedFile | null>(null);
   const [loading, setLoading] = useState(true);
 
