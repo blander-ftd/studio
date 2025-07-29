@@ -137,8 +137,7 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
     });
     
     setFiles(prevFiles => {
-        const existingIds = new Set(prevFiles.map(f => f.id));
-        const newUniqueFiles = filesWithStatus.filter(f => !existingIds.has(f.id));
+        const newUniqueFiles = filesWithStatus.filter(f => !prevFiles.some(pf => pf.id === f.id));
         return [...newUniqueFiles, ...prevFiles];
     });
   }, []);
