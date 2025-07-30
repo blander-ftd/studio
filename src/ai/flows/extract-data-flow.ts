@@ -24,10 +24,14 @@ const ExtractDataInputSchema = z.object({
 export type ExtractDataInput = z.infer<typeof ExtractDataInputSchema>;
 
 const ProductSchema = z.object({
-    UPC: z.string().describe("The product's UPC, EAN, or internal code."),
-    "Nombre fabricante": z.string().describe("The name of the product manufacturer."),
-    "% costo de oferta PSL": z.number().nullable().describe("The percentage discount for the PSL offer."),
-    "Monto mínimo de la oferta": z.number().nullable().describe("The minimum amount for the offer."),
+    provider_code: z.string().describe("The provider code from the file."),
+    product_code: z.string().describe("The product's code (EAN/EAN13 or internal SKU)."),
+    product_description: z.string().describe("The full description of the product."),
+    brand: z.string().describe("The brand name of the product."),
+    category: z.string().describe("The category of the product."),
+    discount_description: z.string().describe("A combined description of all applicable discounts."),
+    minimum_purchase_quantity: z.number().nullable().describe("The minimum quantity required for the offer."),
+    offer_conditions: z.string().nullable().describe("Specific conditions for the offer."),
 });
 
 const ExtractDataOutputSchema = z.object({
@@ -48,28 +52,32 @@ const extractDataPrompt = ai.definePrompt({
 {
   "products": [
     {
-      "UPC": "string",
-      "Nombre fabricante": "string", 
-      "% costo de oferta PSL": "number|null",
-      "Monto mínimo de la oferta": "number|null"
+      "provider_code": "string",
+      "product_code": "string",
+      "product_description": "string",
+      "brand": "string",
+      "category": "string",
+      "discount_description": "string",
+      "minimum_purchase_quantity": "integer|null",
+      "offer_conditions": "string|null"
     }
   ]
 }
 
-The file is provided as a binary blob. Analyze its content to determine if it is a PDF or an Excel file and extract the data accordingly.
-
 Follow these extraction rules:
-1. **UPC**: Prioritize EAN/EAN13 values > UPC codes > Internal codes (such as EAN or an internal SKU) > Parse from description
-2. **Nombre fabricante**: Use 'Fabricante'/'Marca'/'MARCA'/'Línea'/'Proveedor' columns (e.g., ESPADOL, VEET, Dove)
-3. **% costo de oferta PSL**: Extract percentage values from 'PSL'/'% Dto. PSL'/'Descuento PSL'/'Costo oferta PSL' columns (convert to decimal if needed)
-4. **Monto mínimo de la oferta**: Extract monetary amounts from 'Monto mínimo'/'Compra mínima'/'Valor mínimo'/'Minimum amount' fields
+1. **product_code**: Prioritize EAN/EAN13 values > Internal codes (like such as EAN or an internal SKU) > Parse from description
+2. **product_description**: Combine 'Producto'/'Descripción SKU' + 'PRESENTACION' fields
+3. **brand**: Use 'Marca'/'MARCA'/'Línea' columns (e.g., ESPADOL, VEET, Dove)
+4. **category**: Use 'Categoría'/'Negocio' > Section headers (e.g., 'ANALGESICOS & ANTIINFLAMATORIOS')
+5. **discount_description**: Combine all discount fields (e.g., 'Descuento TRANSFER' + 'Dinámica Consumidor final' + '% Dto. PSL.')
+6. **minimum_purchase_quantity**: Extract integers from 'Unid. Minimas'/'Compra mínima' (ignore text)
+7. **offer_conditions**: Include phrases like '2da al 70%', 'Se puede combinar'
+8. **provider_code**: Extract the provider code from the file.
 
 Handle data quirks:
 - PDF tables may have inconsistent spacing
 - Some CSVs have header rows with metadata
-- Discounts and amounts appear in multiple columns/formats
-- Convert percentage strings to numbers (e.g., "15%" → 15)
-- Convert currency strings to numbers (e.g., "$1,500" → 1500)
+- Discounts appear in multiple columns/formats
 - Null values when data is missing
 
 Return only valid JSON output with no additional text. Do not include empty objects in the products array.
@@ -107,7 +115,7 @@ const extractDataFlow = ai.defineFlow(
     
     // Filter out any products that are missing required fields or are empty objects
     const validProducts = output.products.filter(product => {
-        return product.UPC && product["Nombre fabricante"];
+        return product.product_code && product.product_description;
     });
 
     return { products: validProducts };
