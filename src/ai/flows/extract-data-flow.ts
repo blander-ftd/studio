@@ -80,7 +80,7 @@ Handle data quirks:
 - Discounts appear in multiple columns/formats
 - Null values when data is missing
 
-Return only valid JSON output with no additional text. Do not include empty objects in the products array.
+Return only valid JSON output with no additional text. Do not include empty or incomplete objects in the products array.
 
 File ({{fileType}}): {{media url=fileDataUri}}
 `,
@@ -115,7 +115,7 @@ const extractDataFlow = ai.defineFlow(
     
     // Filter out any products that are missing required fields or are empty objects
     const validProducts = output.products.filter(product => {
-        return product.product_code && product.product_description;
+        return product.product_code && product.product_description && product.provider_code && product.brand;
     });
 
     return { products: validProducts };
