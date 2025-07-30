@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { UploadedFile } from "@/types";
+import { FileSummary } from "./file-summary";
 
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return "0 Bytes";
@@ -34,15 +35,33 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
   }
 
   const renderDataPreview = () => {
-    if (!file.processedData) {
+    if (!file.processedData || !file.processedData.products || file.processedData.products.length === 0) {
         return <p className="text-muted-foreground">Aún no hay datos procesados para este archivo.</p>
     }
 
-    // Always show the raw JSON response as requested
     return (
-        <pre className="p-4 bg-muted rounded-md text-sm overflow-x-auto">
-            {JSON.stringify(file.processedData, null, 2)}
-        </pre>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Código de Producto</TableHead>
+            <TableHead>Descripción</TableHead>
+            <TableHead>Marca</TableHead>
+            <TableHead>Categoría</TableHead>
+            <TableHead>Descuento</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {file.processedData.products.map((product: any, index: number) => (
+            <TableRow key={index}>
+              <TableCell className="font-mono text-xs">{product.product_code}</TableCell>
+              <TableCell>{product.product_description}</TableCell>
+              <TableCell>{product.brand}</TableCell>
+              <TableCell>{product.category}</TableCell>
+              <TableCell>{product.discount_description}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     )
   }
 
@@ -81,19 +100,8 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
                     <span className="font-medium">{new Date(file.uploadDate).toLocaleDateString()}</span>
                 </CardContent>
             </Card>
-            {file.processedData && file.processedData.summary && file.processedData.rowCount && (
-                <Card className="lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>Resumen del Procesamiento</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-                         <span className="text-muted-foreground">Resumen</span>
-                         <span className="font-medium">{file.processedData.summary}</span>
-
-                        <span className="text-muted-foreground">Filas Encontradas</span>
-                        <span className="font-medium">{file.processedData.rowCount}</span>
-                    </CardContent>
-                </Card>
+            {file.processedData && file.processedData.products && file.processedData.products.length > 0 && (
+                <FileSummary products={file.processedData.products} />
             )}
         </div>
         <Card>
