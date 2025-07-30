@@ -2,16 +2,20 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { useParams } from 'next/navigation';
 import FileDetailClient from "./file-detail-client";
 import type { UploadedFile } from "@/types";
 
 // This component is now a client component to access sessionStorage
-export default function FileDetailPage({ params }: { params: { fileId: string } }) {
+export default function FileDetailPage() {
   const [file, setFile] = useState<UploadedFile | null>(null);
   const [loading, setLoading] = useState(true);
-  const { fileId } = params;
+  const params = useParams();
+  const fileId = Array.isArray(params.fileId) ? params.fileId[0] : params.fileId;
 
   useEffect(() => {
+    if (!fileId) return;
+
     try {
       // Use a unique key for each file to avoid conflicts in sessionStorage
       const storedFileJson = sessionStorage.getItem(`selectedFile_${fileId}`);
