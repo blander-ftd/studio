@@ -31,46 +31,42 @@ export function FileUploader({ onUploadComplete, existingFiles }: FileUploaderPr
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFiles = useCallback((files: File[]) => {
-      const validFiles = Array.from(files).filter(file => {
-        if (!Object.keys(ACCEPTED_FILE_TYPES).includes(file.type)) {
-            toast({
-                title: "Tipo de archivo no válido",
-                description: `El archivo "${file.name}" no es soportado. Solo se permiten archivos Excel y PDF.`,
-                variant: "destructive",
-            });
-            return false;
-        }
-        
-        const isDuplicate = existingFiles.some(existingFile => 
-            existingFile.name === file.name && existingFile.size === file.size
-        );
-        
-        if (isDuplicate) {
-            toast({
-                title: "Archivo duplicado",
-                description: `El archivo "${file.name}" ya ha sido cargado.`,
-                variant: "destructive",
-            });
-            return false;
-        }
+  const handleFiles = useCallback((files: FileList | null) => {
+      if (!files || files.length === 0) {
+        return;
+      }
 
-        return true;
-      });
+      const file = files[0];
 
-      if (!validFiles.length) {
+      if (!Object.keys(ACCEPTED_FILE_TYPES).includes(file.type)) {
+          toast({
+              title: "Tipo de archivo no válido",
+              description: `El archivo "${file.name}" no es soportado. Solo se permiten archivos Excel y PDF.`,
+              variant: "destructive",
+          });
+          return;
+      }
+      
+      const isDuplicate = existingFiles.some(existingFile => 
+          existingFile.name === file.name && existingFile.size === file.size
+      );
+      
+      if (isDuplicate) {
+          toast({
+              title: "Archivo duplicado",
+              description: `El archivo "${file.name}" ya ha sido cargado.`,
+              variant: "destructive",
+          });
           return;
       }
 
-      const newUploads: UploadingFile[] = validFiles.map(file => ({
+      const newUpload: UploadingFile = {
         id: crypto.randomUUID(),
         file,
         progress: 0,
-      }));
+      };
 
-      setUploadingFiles(prev => [...prev, ...newUploads]);
-
-      const uploadsToComplete: (Omit<UploadedFile, 'status' | 'processedData' | 'icon'> & { file: File })[] = [];
+      setUploadingFiles([newUpload]);
 
       const simulateUpload = (upload: UploadingFile) => {
           const interval = setInterval(() => {
@@ -81,26 +77,18 @@ export function FileUploader({ onUploadComplete, existingFiles }: FileUploaderPr
                         if (newProgress >= 100) {
                             clearInterval(interval);
                             
-                            // Use a short timeout to allow the 100% progress to be seen
                             setTimeout(() => {
-                                // Mark as ready to be passed to parent
                                 const fileType = f.file.type === 'application/pdf' ? 'PDF' : 'Excel';
-                                uploadsToComplete.push({
+                                onUploadComplete([{
                                     id: f.id,
                                     name: f.file.name,
                                     size: f.file.size,
                                     type: fileType,
                                     uploadDate: new Date(),
                                     file: f.file,
-                                });
+                                }]);
 
-                                // Remove from the local uploading state
                                 setUploadingFiles(current => current.filter(uf => uf.id !== f.id));
-
-                                // If all files are done, call the parent callback
-                                if (uploadsToComplete.length === newUploads.length) {
-                                    onUploadComplete(uploadsToComplete);
-                                }
                             }, 500);
 
                             return { ...f, progress: 100 };
@@ -113,7 +101,7 @@ export function FileUploader({ onUploadComplete, existingFiles }: FileUploaderPr
           }, 100);
       };
 
-      newUploads.forEach(simulateUpload);
+      simulateUpload(newUpload);
     },
     [onUploadComplete, toast, existingFiles]
   );
@@ -131,14 +119,11 @@ export function FileUploader({ onUploadComplete, existingFiles }: FileUploaderPr
   const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    handleFiles(Array.from(e.dataTransfer.files));
+    handleFiles(e.dataTransfer.files);
   };
   
   const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      handleFiles(Array.from(e.target.files));
-    }
-    // Reset file input to allow selecting the same file again
+    handleFiles(e.target.files);
     if(fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -160,7 +145,6 @@ export function FileUploader({ onUploadComplete, existingFiles }: FileUploaderPr
                 ref={fileInputRef}
                 onChange={onFileSelect}
                 className="hidden"
-                multiple
                 accept={Object.keys(ACCEPTED_FILE_TYPES).join(',')}
             />
             <UploadCloud className={`h-12 w-12 mb-4 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
