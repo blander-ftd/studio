@@ -7,6 +7,8 @@ import { FileSpreadsheet, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { extractData } from "@/ai/flows/extract-data-flow";
 import * as xlsx from 'xlsx';
+import { db } from "@/lib/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 interface FilesContextType {
   files: UploadedFile[];
@@ -40,24 +42,17 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
 
       const fileTypeForRequest = fileToProcess.type === 'PDF' ? 'pdf' : 'excel';
       
-      let finalInput = {
+      const result = await extractData({
         fileDataUri: fileData,
         fileType: fileTypeForRequest,
-      };
+      });
 
-      if (fileTypeForRequest === 'excel') {
-        const base64Data = fileData.split(',')[1];
-        const buffer = Buffer.from(base64Data, 'base64');
-        const workbook = xlsx.read(buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const csvData = xlsx.utils.sheet_to_csv(worksheet);
-        const csvBase64 = Buffer.from(csvData).toString('base64');
-        
-        finalInput.fileDataUri = `data:text/csv;base64,${csvBase64}`;
+      if (result && result.products.length > 0) {
+        await addDoc(collection(db, "processed_files"), {
+          created_time: serverTimestamp(),
+          products: result.products,
+        });
       }
-      
-      const result = await extractData(finalInput);
 
       setFiles((prevFiles) =>
         prevFiles.map((f) =>

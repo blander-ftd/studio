@@ -10,7 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import * as xlsx from 'xlsx';
 
 const ExtractDataInputSchema = z.object({
   fileDataUri: z
@@ -93,29 +92,15 @@ const extractDataFlow = ai.defineFlow(
     outputSchema: ExtractDataOutputSchema,
   },
   async (input) => {
-    let finalInput = { ...input };
-
-    if (input.fileType === 'excel') {
-      const base64Data = input.fileDataUri.split(',')[1];
-      const buffer = Buffer.from(base64Data, 'base64');
-      const workbook = xlsx.read(buffer, { type: 'buffer' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const csvData = xlsx.utils.sheet_to_csv(worksheet);
-      const csvBase64 = Buffer.from(csvData).toString('base64');
-      
-      finalInput.fileDataUri = `data:text/csv;base64,${csvBase64}`;
-    }
     
-    const { output } = await extractDataPrompt(finalInput);
+    const { output } = await extractDataPrompt(input);
 
     if (!output) {
       return { products: [] };
     }
     
-    // Filter out any products that are missing required fields or are empty objects
     const validProducts = output.products.filter(product => {
-        return product.product_code && product.product_description && product.provider_code && product.brand;
+        return product.provider_code && product.product_code && product.product_description;
     });
 
     return { products: validProducts };
