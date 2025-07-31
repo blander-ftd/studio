@@ -44,11 +44,7 @@ export async function extractData(input: ExtractDataInput): Promise<ExtractDataO
   return extractDataFlow(input);
 }
 
-const extractDataPrompt = ai.definePrompt({
-  name: 'extractDataPrompt',
-  input: { schema: z.object({ fileContent: z.string(), fileType: z.enum(['pdf', 'excel', 'text']) }) },
-  output: { schema: ExtractDataOutputSchema },
-  prompt: `Extract product promotion data from the provided file content and return a JSON list matching this schema:
+const basePrompt = `Extract product promotion data from the provided file content and return a JSON list matching this schema:
 {
   "products": [
     {
@@ -80,14 +76,21 @@ Handle data quirks:
 - Discounts appear in multiple columns/formats
 - Null values when data is missing
 
-Return only valid JSON output with no additional text. Do not include empty or incomplete objects in the products array.
+Return only valid JSON output with no additional text. Do not include empty or incomplete objects in the products array.`;
 
-File ({{fileType}}): 
-{{#if (eq fileType "pdf")}}
-  {{media url=fileContent}}
-{{else}}
-  {{fileContent}}
-{{/if}}
+const extractDataPrompt = ai.definePrompt({
+  name: 'extractDataPrompt',
+  input: { schema: z.object({ fileContent: z.string() }) },
+  output: { schema: ExtractDataOutputSchema },
+  prompt: `${basePrompt}
+
+File (text): 
+{{fileContent}}
+`,
+  pdfPrompt: `${basePrompt}
+
+File (pdf): 
+{{media url=fileContent}}
 `,
 });
 
@@ -99,7 +102,7 @@ const extractDataFlow = ai.defineFlow(
   },
   async (input) => {
     let fileContent = input.fileDataUri;
-    let promptFileType: 'pdf' | 'excel' | 'text' = input.fileType;
+    let isPdf = input.fileType === 'pdf';
 
     if (input.fileType === 'excel') {
       try {
@@ -109,14 +112,18 @@ const extractDataFlow = ai.defineFlow(
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         fileContent = xlsx.utils.sheet_to_csv(worksheet);
-        promptFileType = 'text';
+        isPdf = false;
       } catch (e) {
         console.error("Error parsing excel file: ", e);
         throw new Error("Could not parse the Excel file.");
       }
     }
     
-    const { output } = await extractDataPrompt({ fileContent: fileContent, fileType: promptFileType });
+    const finalInput = { fileContent: fileContent };
+
+    const { output } = isPdf
+      ? await extractDataPrompt.pdf(finalInput)
+      : await extractDataPrompt(finalInput);
 
     if (!output) {
       return { products: [] };
