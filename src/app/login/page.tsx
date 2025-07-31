@@ -1,13 +1,44 @@
+
 "use client"
 
-import Link from "next/link"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { FileCatalystLogo } from "@/components/icons"
 import { Label } from "@/components/ui/label"
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { app } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+  const auth = getAuth(app);
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Failed to sign in", error);
+      toast({
+        title: "Error de autenticación",
+        description: "El correo electrónico o la contraseña son incorrectos.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <Card className="mx-auto max-w-sm w-full shadow-2xl">
@@ -19,28 +50,42 @@ export default function LoginPage() {
           <CardDescription>Ingresa tus credenciales para acceder</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@ejemplo.com" required />
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="m@ejemplo.com" 
+                required 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input id="password" type="password" required />
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+              />
             </div>
             <div className="pt-2">
-              <Link href="/dashboard" className="w-full">
-                <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-                  Ingresar
-                </Button>
-              </Link>
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Ingresar
+              </Button>
             </div>
-          </div>
+          </form>
           <div className="mt-4 text-center text-sm">
             No tienes Cuenta?{" "}
-            <Link href="#" className="underline text-primary">
+            <a href="#" className="underline text-primary">
               Crear
-            </Link>
+            </a>
           </div>
         </CardContent>
       </Card>
