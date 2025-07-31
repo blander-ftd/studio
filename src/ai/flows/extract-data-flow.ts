@@ -10,6 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import * as xlsx from 'xlsx';
 
 const ExtractDataInputSchema = z.object({
   fileDataUri: z
@@ -45,9 +46,9 @@ export async function extractData(input: ExtractDataInput): Promise<ExtractDataO
 
 const extractDataPrompt = ai.definePrompt({
   name: 'extractDataPrompt',
-  input: { schema: ExtractDataInputSchema },
+  input: { schema: z.object({ fileContent: z.string(), fileType: z.enum(['pdf', 'excel', 'text']) }) },
   output: { schema: ExtractDataOutputSchema },
-  prompt: `Extract product promotion data from the provided files and return a JSON list matching this schema:
+  prompt: `Extract product promotion data from the provided file content and return a JSON list matching this schema:
 {
   "products": [
     {
@@ -81,7 +82,12 @@ Handle data quirks:
 
 Return only valid JSON output with no additional text. Do not include empty or incomplete objects in the products array.
 
-File ({{fileType}}): {{media url=fileDataUri}}
+File ({{fileType}}): 
+{{#if (eq fileType "pdf")}}
+  {{media url=fileContent}}
+{{else}}
+  {{fileContent}}
+{{/if}}
 `,
 });
 
@@ -92,8 +98,25 @@ const extractDataFlow = ai.defineFlow(
     outputSchema: ExtractDataOutputSchema,
   },
   async (input) => {
+    let fileContent = input.fileDataUri;
+    let promptFileType: 'pdf' | 'excel' | 'text' = input.fileType;
+
+    if (input.fileType === 'excel') {
+      try {
+        const base64Data = input.fileDataUri.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const workbook = xlsx.read(buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        fileContent = xlsx.utils.sheet_to_csv(worksheet);
+        promptFileType = 'text';
+      } catch (e) {
+        console.error("Error parsing excel file: ", e);
+        throw new Error("Could not parse the Excel file.");
+      }
+    }
     
-    const { output } = await extractDataPrompt(input);
+    const { output } = await extractDataPrompt({ fileContent: fileContent, fileType: promptFileType });
 
     if (!output) {
       return { products: [] };
