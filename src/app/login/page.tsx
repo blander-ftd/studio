@@ -12,11 +12,13 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { UserForm, type User } from "@/components/user-form";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -38,56 +40,78 @@ export default function LoginPage() {
     }
   };
 
+  const handleSignUp = () => {
+    setIsFormOpen(true);
+  };
+
+  const handleSaveUser = (user: User) => {
+    console.log("New user request:", user);
+    toast({
+      title: "Solicitud Enviada",
+      description: "Su solicitud de registro ha sido enviada para aprobación.",
+    });
+    setIsFormOpen(false);
+  };
+
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <Card className="mx-auto max-w-sm w-full shadow-2xl">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center items-center gap-2 mb-4">
-            <FileCatalystLogo className="h-24 w-24 text-primary" />
-            <CardTitle className="text-3xl font-bold">Portal de Transfers FARMATODO</CardTitle>
-          </div>
-          <CardDescription>Ingresa tus credenciales para acceder</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="m@ejemplo.com" 
-                required 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-              />
+    <>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Card className="mx-auto max-w-sm w-full shadow-2xl">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center items-center gap-2 mb-4">
+              <FileCatalystLogo className="h-24 w-24 text-primary" />
+              <CardTitle className="text-3xl font-bold">Portal de Transfers FARMATODO</CardTitle>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-            <div className="pt-2">
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Ingresar
+            <CardDescription>Ingresa tus credenciales para acceder</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="m@ejemplo.com" 
+                  required 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  required 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+              <div className="pt-2">
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Ingresar
+                </Button>
+              </div>
+            </form>
+            <div className="mt-4 text-center text-sm">
+              No tienes Cuenta?{" "}
+              <Button variant="link" className="p-0 h-auto text-primary" onClick={handleSignUp}>
+                Crear
               </Button>
             </div>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            No tienes Cuenta?{" "}
-            <a href="#" className="underline text-primary">
-              Crear
-            </a>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </div>
+      <UserForm
+        isOpen={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSave={handleSaveUser}
+        user={null}
+      />
+    </>
   )
 }
