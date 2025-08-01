@@ -44,7 +44,7 @@ export default function LoginPage() {
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center items-center gap-2 mb-4">
             <FileCatalystLogo className="h-24 w-24 text-primary" />
-            <CardTitle className="text-3xl font-bold">Portal de Aliados Comerciales</CardTitle>
+            <CardTitle className="text-3xl font-bold">Portal de Transfers FARMATODO</CardTitle>
           </div>
           <CardDescription>Ingresa tus credenciales para acceder</CardDescription>
         </CardHeader>
