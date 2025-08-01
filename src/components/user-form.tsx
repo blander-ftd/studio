@@ -38,7 +38,7 @@ const userSchema = z.object({
   role: z.enum(["Admin", "Usuario", "Proveedor"], {
     required_error: "Por favor seleccione un rol.",
   }),
-  status: z.string().optional(),
+  status: z.enum(["Active", "Inactive", "Pending"]).optional(),
 });
 
 export type User = z.infer<typeof userSchema>;

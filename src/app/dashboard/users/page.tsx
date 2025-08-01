@@ -69,6 +69,12 @@ export default function UsersPage() {
   const handleRejectUser = (userId: string) => {
     setPendingUsers(pendingUsers.filter(u => u.id !== userId));
   };
+  
+  const handleToggleStatus = (userId: string) => {
+    setUsers(users.map(u => 
+      u.id === userId ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u
+    ));
+  };
 
 
   return (
@@ -147,9 +153,15 @@ export default function UsersPage() {
                                 <TableCell>{user.email}</TableCell>
                                 <TableCell>{user.role}</TableCell>
                                 <TableCell>
-                                    <Badge variant={user.status === 'Active' ? 'default' : 'secondary'}>
+                                    <Button
+                                        variant={user.status === 'Active' ? 'default' : 'secondary'}
+                                        size="sm"
+                                        onClick={() => handleToggleStatus(user.id!)}
+                                        disabled={!isAdmin}
+                                        className="w-24"
+                                    >
                                         {user.status}
-                                    </Badge>
+                                    </Button>
                                 </TableCell>
                                 {isAdmin && (
                                     <TableCell>
