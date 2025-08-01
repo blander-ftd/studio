@@ -80,6 +80,12 @@ export default function UsersPage() {
       u.id === userId ? { ...u, role: newRole } : u
     ));
   };
+  
+  const handlePendingUserRoleChange = (userId: string, newRole: "Admin" | "Usuario" | "Proveedor") => {
+    setPendingUsers(pendingUsers.map(u =>
+      u.id === userId ? { ...u, role: newRole } : u
+    ));
+  };
 
 
   return (
@@ -112,7 +118,27 @@ export default function UsersPage() {
                                 <TableRow key={user.id}>
                                     <TableCell className="font-medium">{user.name}</TableCell>
                                     <TableCell>{user.email}</TableCell>
-                                    <TableCell>{user.role}</TableCell>
+                                    <TableCell>
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="outline" className="flex items-center gap-2">
+                                            {user.role}
+                                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuItem onClick={() => handlePendingUserRoleChange(user.id!, "Admin")}>
+                                            Admin
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePendingUserRoleChange(user.id!, "Usuario")}>
+                                            Usuario
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePendingUserRoleChange(user.id!, "Proveedor")}>
+                                            Proveedor
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <Button variant="ghost" size="icon" onClick={() => handleApproveUser(user)}>
                                             <Check className="h-4 w-4 text-green-500" />
