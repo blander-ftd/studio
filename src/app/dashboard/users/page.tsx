@@ -5,9 +5,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Check, X } from "lucide-react";
+import { MoreHorizontal, Check, X, ChevronDown } from "lucide-react";
 import { UserForm, User } from "@/components/user-form";
 import { useAuth } from "@/context/auth-context";
 
@@ -73,6 +72,12 @@ export default function UsersPage() {
   const handleToggleStatus = (userId: string) => {
     setUsers(users.map(u => 
       u.id === userId ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u
+    ));
+  };
+
+  const handleRoleChange = (userId: string, newRole: "Admin" | "Usuario" | "Proveedor") => {
+    setUsers(users.map(u =>
+      u.id === userId ? { ...u, role: newRole } : u
     ));
   };
 
@@ -151,7 +156,31 @@ export default function UsersPage() {
                             <TableRow key={user.id}>
                                 <TableCell className="font-medium">{user.name}</TableCell>
                                 <TableCell>{user.email}</TableCell>
-                                <TableCell>{user.role}</TableCell>
+                                <TableCell>
+                                  {isAdmin ? (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" className="flex items-center gap-2">
+                                          {user.role}
+                                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => handleRoleChange(user.id!, "Admin")}>
+                                          Admin
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleRoleChange(user.id!, "Usuario")}>
+                                          Usuario
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleRoleChange(user.id!, "Proveedor")}>
+                                          Proveedor
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  ) : (
+                                    user.role
+                                  )}
+                                </TableCell>
                                 <TableCell>
                                     <Button
                                         variant={user.status === 'Active' ? 'default' : 'secondary'}
