@@ -13,6 +13,16 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
+// Helper to map Firestore boolean to string status
+const mapStatus = (status: boolean | string | undefined): "Active" | "Inactive" => {
+    if (typeof status === 'boolean') {
+        return status ? 'Active' : 'Inactive';
+    }
+    // Default to Inactive if status is missing or not a boolean
+    return status === 'Active' ? 'Active' : 'Inactive';
+};
+
+
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
@@ -28,24 +38,33 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const usersCollection = collection(db, "users");
-      const pendingUsersCollection = collection(db, "pending_users");
-
-      const [usersSnapshot, pendingUsersSnapshot] = await Promise.all([
-        getDocs(usersCollection),
-        getDocs(pendingUsersCollection),
-      ]);
-
-      const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-      const pendingUsersList = pendingUsersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-
+      const usersSnapshot = await getDocs(usersCollection);
+      const usersList = usersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return { 
+              id: doc.id, 
+              ...data,
+              status: mapStatus(data.status)
+          } as User
+      });
       setUsers(usersList);
+
+      // Temporarily disabling pending users fetch until read access is granted in Firestore rules.
+      // To re-enable:
+      // 1. Ensure firestore.rules allows read on 'pending_users'.
+      // 2. Uncomment the following lines.
+      /*
+      const pendingUsersCollection = collection(db, "pending_users");
+      const pendingUsersSnapshot = await getDocs(pendingUsersCollection);
+      const pendingUsersList = pendingUsersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
       setPendingUsers(pendingUsersList);
+      */
 
     } catch (error) {
       console.error("Error fetching users:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar los datos de los usuarios.",
+        description: "No se pudieron cargar los datos de los usuarios. Verifique las reglas de Firestore.",
         variant: "destructive",
       });
     } finally {
@@ -70,6 +89,7 @@ export default function UsersPage() {
   };
   
   const handleDeleteUser = async (userId: string) => {
+    if (!isAdmin) return;
     try {
         await deleteDoc(doc(db, "users", userId));
         setUsers(users.filter(u => u.id !== userId));
@@ -81,11 +101,13 @@ export default function UsersPage() {
   };
 
   const handleSaveUser = async (user: User) => {
+     if (!isAdmin) return;
     if (editingUser && user.id) {
       // Edit existing user
       try {
         const userRef = doc(db, "users", user.id);
-        await updateDoc(userRef, { name: user.name, email: user.email, role: user.role });
+        const statusAsBoolean = user.status === 'Active';
+        await updateDoc(userRef, { name: user.name, email: user.email, role: user.role, status: statusAsBoolean });
         fetchUsers(); // Refresh data
         toast({ title: "Éxito", description: "Usuario actualizado correctamente." });
       } catch (error) {
@@ -93,7 +115,7 @@ export default function UsersPage() {
         toast({ title: "Error", description: "No se pudo actualizar el usuario.", variant: "destructive" });
       }
     } else {
-      // Add new user is handled from login page, but here for completeness
+      // Add new user (as pending)
       try {
         const newUserRef = doc(collection(db, "pending_users"));
         await setDoc(newUserRef, { ...user, id: newUserRef.id, status: 'Pending' });
@@ -109,9 +131,9 @@ export default function UsersPage() {
   };
   
   const handleApproveUser = async (user: User) => {
-    if(!user.id) return;
+    if(!user.id || !isAdmin) return;
     try {
-        await setDoc(doc(db, "users", user.id), { ...user, status: 'Active' });
+        await setDoc(doc(db, "users", user.id), { name: user.name, email: user.email, role: user.role, status: true });
         await deleteDoc(doc(db, "pending_users", user.id));
         fetchUsers();
         toast({ title: "Éxito", description: "Usuario aprobado." });
@@ -122,6 +144,7 @@ export default function UsersPage() {
   };
 
   const handleRejectUser = async (userId: string) => {
+    if (!isAdmin) return;
     try {
         await deleteDoc(doc(db, "pending_users", userId));
         setPendingUsers(pendingUsers.filter(u => u.id !== userId));
@@ -133,12 +156,14 @@ export default function UsersPage() {
   };
   
   const handleToggleStatus = async (userId: string) => {
+    if (!isAdmin) return;
     const user = users.find(u => u.id === userId);
     if (!user) return;
     const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
+    const newStatusAsBoolean = newStatus === 'Active';
     try {
         const userRef = doc(db, "users", userId);
-        await updateDoc(userRef, { status: newStatus });
+        await updateDoc(userRef, { status: newStatusAsBoolean });
         setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
         toast({ title: "Éxito", description: "Estado del usuario actualizado." });
     } catch (error) {
@@ -148,6 +173,7 @@ export default function UsersPage() {
   };
 
   const handleRoleChange = async (userId: string, newRole: "Admin" | "Usuario" | "Proveedor") => {
+    if (!isAdmin) return;
     try {
         const userRef = doc(db, "users", userId);
         await updateDoc(userRef, { role: newRole });
@@ -160,6 +186,7 @@ export default function UsersPage() {
   };
   
   const handlePendingUserRoleChange = async (userId: string, newRole: "Admin" | "Usuario" | "Proveedor") => {
+    if (!isAdmin) return;
     try {
         const userRef = doc(db, "pending_users", userId);
         await updateDoc(userRef, { role: newRole });
@@ -177,7 +204,7 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold font-headline tracking-tight">
             Usuarios
           </h1>
-          <Button onClick={handleAddUser}>Agregar Usuario</Button>
+          {isAdmin && <Button onClick={handleAddUser}>Agregar Usuario</Button>}
         </div>
 
         {isAdmin && pendingUsers.length > 0 && (
@@ -332,14 +359,13 @@ export default function UsersPage() {
                 )}
             </CardContent>
         </Card>
-        <UserForm 
+        {isAdmin && <UserForm 
             isOpen={isFormOpen}
             onOpenChange={setIsFormOpen}
             onSave={handleSaveUser}
             user={editingUser}
-        />
+        />}
     </div>
   )
-}
 
     
