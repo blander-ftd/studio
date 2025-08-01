@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input"
 import { FileCatalystLogo } from "@/components/icons"
 import { Label } from "@/components/ui/label"
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { UserForm, type User } from "@/components/user-form";
+import { collection, doc, setDoc } from "firebase/firestore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -44,13 +45,23 @@ export default function LoginPage() {
     setIsFormOpen(true);
   };
 
-  const handleSaveUser = (user: User) => {
-    console.log("New user request:", user);
-    toast({
-      title: "Solicitud Enviada",
-      description: "Su solicitud de registro ha sido enviada para aprobación.",
-    });
-    setIsFormOpen(false);
+  const handleSaveUser = async (user: User) => {
+    try {
+        const newUserRef = doc(collection(db, "pending_users"));
+        await setDoc(newUserRef, { ...user, id: newUserRef.id, status: 'Pending' });
+        toast({
+            title: "Solicitud Enviada",
+            description: "Su solicitud de registro ha sido enviada para aprobación.",
+        });
+        setIsFormOpen(false);
+    } catch (error) {
+        console.error("Error creating user request:", error);
+        toast({
+            title: "Error",
+            description: "No se pudo enviar su solicitud. Por favor, inténtelo de nuevo.",
+            variant: "destructive",
+        });
+    }
   };
 
 
@@ -115,3 +126,5 @@ export default function LoginPage() {
     </>
   )
 }
+
+    

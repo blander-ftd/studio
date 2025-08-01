@@ -62,16 +62,18 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
   });
 
   useEffect(() => {
-    if (user) {
-      form.reset(user);
-    } else {
-      form.reset({
-        name: "",
-        email: "",
-        role: "Proveedor",
-        status: "Pending",
-        message: ""
-      });
+    if (isOpen) {
+        if (user) {
+          form.reset(user);
+        } else {
+          form.reset({
+            name: "",
+            email: "",
+            role: "Proveedor",
+            status: "Pending",
+            message: ""
+          });
+        }
     }
   }, [user, form, isOpen]);
 
@@ -83,11 +85,11 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{user ? "Editar Usuario" : "Agregar Usuario"}</DialogTitle>
+          <DialogTitle>{user ? "Editar Usuario" : "Solicitar Acceso"}</DialogTitle>
           <DialogDescription>
             {user
               ? "Edite los detalles del usuario a continuación."
-              : "Complete el formulario para agregar un nuevo usuario. El usuario quedará pendiente de aprobación."}
+              : "Complete el formulario para solicitar acceso. Su solicitud quedará pendiente de aprobación por un administrador."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -163,7 +165,7 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">Guardar</Button>
+              <Button type="submit">{user ? "Guardar" : "Enviar Solicitud"}</Button>
             </DialogFooter>
           </form>
         </Form>
@@ -171,3 +173,5 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
     </Dialog>
   );
 }
+
+    

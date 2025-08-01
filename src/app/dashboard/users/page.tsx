@@ -1,37 +1,63 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Check, X, ChevronDown } from "lucide-react";
+import { MoreHorizontal, Check, X, ChevronDown, Loader2 } from "lucide-react";
 import { UserForm, User } from "@/components/user-form";
 import { useAuth } from "@/context/auth-context";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [pendingUsers, setPendingUsers] = useState<User[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const isAdmin = currentUser.role === 'Admin';
 
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const usersCollection = collection(db, "users");
+      const pendingUsersCollection = collection(db, "pending_users");
+
+      const [usersSnapshot, pendingUsersSnapshot] = await Promise.all([
+        getDocs(usersCollection),
+        getDocs(pendingUsersCollection),
+      ]);
+
+      const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+      const pendingUsersList = pendingUsersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+
+      setUsers(usersList);
+      setPendingUsers(pendingUsersList);
+
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los datos de los usuarios.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
-    // Mock data, as we are avoiding direct Firestore calls from the client.
-    const mockUsers: User[] = [
-      { id: '1', name: 'Admin User', email: 'admin@example.com', role: 'Admin', status: 'Active' },
-      { id: '2', name: 'Regular User', email: 'user@example.com', role: 'Usuario', status: 'Active' },
-      { id: '3', name: 'Provider User', email: 'provider@example.com', role: 'Proveedor', status: 'Active' },
-    ];
-    const mockPendingUsers: User[] = [
-        { id: '4', name: 'Pending Admin', email: 'pending.admin@example.com', role: 'Admin', status: 'Pending' },
-    ]
-    setUsers(mockUsers);
-    setPendingUsers(mockPendingUsers);
-  }, []);
+    if (isAdmin) {
+      fetchUsers();
+    }
+  }, [isAdmin, fetchUsers]);
 
   const handleAddUser = () => {
     setEditingUser(null);
@@ -43,53 +69,105 @@ export default function UsersPage() {
     setIsFormOpen(true);
   };
   
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter(u => u.id !== userId));
+  const handleDeleteUser = async (userId: string) => {
+    try {
+        await deleteDoc(doc(db, "users", userId));
+        setUsers(users.filter(u => u.id !== userId));
+        toast({ title: "Éxito", description: "Usuario eliminado correctamente." });
+    } catch (error) {
+        console.error("Error deleting user: ", error);
+        toast({ title: "Error", description: "No se pudo eliminar el usuario.", variant: "destructive" });
+    }
   };
 
-  const handleSaveUser = (user: User) => {
+  const handleSaveUser = async (user: User) => {
     if (editingUser && user.id) {
       // Edit existing user
-      setUsers(users.map(u => u.id === user.id ? user : u));
+      try {
+        const userRef = doc(db, "users", user.id);
+        await updateDoc(userRef, { name: user.name, email: user.email, role: user.role });
+        fetchUsers(); // Refresh data
+        toast({ title: "Éxito", description: "Usuario actualizado correctamente." });
+      } catch (error) {
+        console.error("Error updating user: ", error);
+        toast({ title: "Error", description: "No se pudo actualizar el usuario.", variant: "destructive" });
+      }
     } else {
-      // Add new user to pending
-      const newUser = { 
-        ...user, 
-        id: crypto.randomUUID(), 
-        status: 'Pending' as const,
-      };
-      setPendingUsers([...pendingUsers, newUser]);
+      // Add new user is handled from login page, but here for completeness
+      try {
+        const newUserRef = doc(collection(db, "pending_users"));
+        await setDoc(newUserRef, { ...user, id: newUserRef.id, status: 'Pending' });
+        fetchUsers(); // Refresh data
+        toast({ title: "Éxito", description: "Solicitud de usuario enviada." });
+      } catch (error) {
+        console.error("Error creating user request: ", error);
+        toast({ title: "Error", description: "No se pudo crear la solicitud de usuario.", variant: "destructive" });
+      }
     }
     setIsFormOpen(false);
     setEditingUser(null);
   };
   
-  const handleApproveUser = (user: User) => {
+  const handleApproveUser = async (user: User) => {
     if(!user.id) return;
-    setUsers([...users, { ...user, status: 'Active' }]);
-    setPendingUsers(pendingUsers.filter(u => u.id !== user.id));
+    try {
+        await setDoc(doc(db, "users", user.id), { ...user, status: 'Active' });
+        await deleteDoc(doc(db, "pending_users", user.id));
+        fetchUsers();
+        toast({ title: "Éxito", description: "Usuario aprobado." });
+    } catch (error) {
+        console.error("Error approving user: ", error);
+        toast({ title: "Error", description: "No se pudo aprobar el usuario.", variant: "destructive" });
+    }
   };
 
-  const handleRejectUser = (userId: string) => {
-    setPendingUsers(pendingUsers.filter(u => u.id !== userId));
+  const handleRejectUser = async (userId: string) => {
+    try {
+        await deleteDoc(doc(db, "pending_users", userId));
+        setPendingUsers(pendingUsers.filter(u => u.id !== userId));
+        toast({ title: "Éxito", description: "Usuario rechazado." });
+    } catch (error) {
+        console.error("Error rejecting user: ", error);
+        toast({ title: "Error", description: "No se pudo rechazar el usuario.", variant: "destructive" });
+    }
   };
   
-  const handleToggleStatus = (userId: string) => {
-    setUsers(users.map(u => 
-      u.id === userId ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u
-    ));
+  const handleToggleStatus = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
+    try {
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, { status: newStatus });
+        setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
+        toast({ title: "Éxito", description: "Estado del usuario actualizado." });
+    } catch (error) {
+        console.error("Error toggling status: ", error);
+        toast({ title: "Error", description: "No se pudo cambiar el estado.", variant: "destructive" });
+    }
   };
 
-  const handleRoleChange = (userId: string, newRole: "Admin" | "Usuario" | "Proveedor") => {
-    setUsers(users.map(u =>
-      u.id === userId ? { ...u, role: newRole } : u
-    ));
+  const handleRoleChange = async (userId: string, newRole: "Admin" | "Usuario" | "Proveedor") => {
+    try {
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, { role: newRole });
+        setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+        toast({ title: "Éxito", description: "Rol de usuario actualizado." });
+    } catch (error) {
+        console.error("Error changing role: ", error);
+        toast({ title: "Error", description: "No se pudo cambiar el rol.", variant: "destructive" });
+    }
   };
   
-  const handlePendingUserRoleChange = (userId: string, newRole: "Admin" | "Usuario" | "Proveedor") => {
-    setPendingUsers(pendingUsers.map(u =>
-      u.id === userId ? { ...u, role: newRole } : u
-    ));
+  const handlePendingUserRoleChange = async (userId: string, newRole: "Admin" | "Usuario" | "Proveedor") => {
+    try {
+        const userRef = doc(db, "pending_users", userId);
+        await updateDoc(userRef, { role: newRole });
+        setPendingUsers(pendingUsers.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    } catch (error) {
+        console.error("Error changing pending role: ", error);
+        toast({ title: "Error", description: "No se pudo cambiar el rol del usuario pendiente.", variant: "destructive" });
+    }
   };
 
 
@@ -114,6 +192,7 @@ export default function UsersPage() {
                             <TableRow>
                                 <TableHead>Nombre</TableHead>
                                 <TableHead>Email</TableHead>
+                                <TableHead>Mensaje</TableHead>
                                 <TableHead>Rol</TableHead>
                                 <TableHead className="text-right">Acciones</TableHead>
                             </TableRow>
@@ -123,6 +202,7 @@ export default function UsersPage() {
                                 <TableRow key={user.id}>
                                     <TableCell className="font-medium">{user.name}</TableCell>
                                     <TableCell>{user.email}</TableCell>
+                                    <TableCell className="text-muted-foreground max-w-xs truncate">{user.message || "-"}</TableCell>
                                     <TableCell>
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -168,6 +248,11 @@ export default function UsersPage() {
                 <CardDescription>Administre los usuarios de su organización.</CardDescription>
             </CardHeader>
             <CardContent>
+                 {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : (
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -244,6 +329,7 @@ export default function UsersPage() {
                         ))}
                     </TableBody>
                 </Table>
+                )}
             </CardContent>
         </Card>
         <UserForm 
@@ -255,3 +341,5 @@ export default function UsersPage() {
     </div>
   )
 }
+
+    
