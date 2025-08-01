@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { FileCatalystLogo } from "@/components/icons";
-import { Sparkles, PanelLeft, Users, ChevronDown } from "lucide-react";
+import { Sparkles, PanelLeft, Users, ChevronDown, FileSpreadsheet } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { FilesProvider } from "@/context/files-context";
 import { AuthProvider, useAuth } from "@/context/auth-context";
@@ -51,6 +51,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/dashboard", icon: Sparkles, label: "Procesador de Archivos", role: ['Admin', 'Usuario', 'Proveedor'] },
+    { href: "/dashboard/excel-export", icon: FileSpreadsheet, label: "Exportar a Excel", role: ['Admin', 'Usuario'] },
     { href: "/dashboard/users", icon: Users, label: "Usuarios", role: ['Admin', 'Usuario'] },
   ].filter(item => item.role.includes(user.role));
 
