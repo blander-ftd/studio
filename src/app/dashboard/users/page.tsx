@@ -10,8 +10,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { MoreHorizontal, Check, X } from "lucide-react";
 import { UserForm, User } from "@/components/user-form";
 import { useAuth } from "@/context/auth-context";
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, doc, getDoc, setDoc, deleteDoc, addDoc } from "firebase/firestore";
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
@@ -23,20 +21,17 @@ export default function UsersPage() {
   const isAdmin = currentUser.role === 'Admin';
 
   useEffect(() => {
-    const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-        const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-        setUsers(usersData);
-    });
-
-    const unsubPendingUsers = onSnapshot(collection(db, "pending_users"), (snapshot) => {
-        const pendingUsersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-        setPendingUsers(pendingUsersData);
-    });
-
-    return () => {
-        unsubUsers();
-        unsubPendingUsers();
-    };
+    // Mock data, as we are avoiding direct Firestore calls from the client.
+    const mockUsers: User[] = [
+      { id: '1', name: 'Admin User', email: 'admin@example.com', role: 'Admin', status: 'Active' },
+      { id: '2', name: 'Regular User', email: 'user@example.com', role: 'Usuario', status: 'Active' },
+      { id: '3', name: 'Provider User', email: 'provider@example.com', role: 'Proveedor', status: 'Active' },
+    ];
+    const mockPendingUsers: User[] = [
+        { id: '4', name: 'Pending Admin', email: 'pending.admin@example.com', role: 'Admin', status: 'Pending' },
+    ]
+    setUsers(mockUsers);
+    setPendingUsers(mockPendingUsers);
   }, []);
 
   const handleAddUser = () => {
@@ -49,37 +44,30 @@ export default function UsersPage() {
     setIsFormOpen(true);
   };
   
-  const handleDeleteUser = async (userId: string) => {
-    await deleteDoc(doc(db, "users", userId));
+  const handleDeleteUser = (userId: string) => {
+    setUsers(users.filter(u => u.id !== userId));
   };
 
-  const handleSaveUser = async (user: User) => {
+  const handleSaveUser = (user: User) => {
     if (editingUser && user.id) {
-      // Edit existing user in 'users' collection
-      const userRef = doc(db, "users", user.id);
-      await setDoc(userRef, user, { merge: true });
+      // Edit existing user
+      setUsers(users.map(u => u.id === user.id ? user : u));
     } else {
-      // Add new user to 'pending_users' collection
-      await addDoc(collection(db, "pending_users"), { ...user, status: 'Pending' });
+      // Add new user to pending
+      setPendingUsers([...pendingUsers, { ...user, id: crypto.randomUUID(), status: 'Pending' }]);
     }
     setIsFormOpen(false);
     setEditingUser(null);
   };
   
-  const handleApproveUser = async (user: User) => {
+  const handleApproveUser = (user: User) => {
     if(!user.id) return;
-    const pendingUserRef = doc(db, "pending_users", user.id);
-    const pendingUserSnap = await getDoc(pendingUserRef);
-
-    if (pendingUserSnap.exists()) {
-        const userData = pendingUserSnap.data();
-        await setDoc(doc(db, "users", user.id), { ...userData, status: 'Active' });
-        await deleteDoc(pendingUserRef);
-    }
+    setUsers([...users, { ...user, status: 'Active' }]);
+    setPendingUsers(pendingUsers.filter(u => u.id !== user.id));
   };
 
-  const handleRejectUser = async (userId: string) => {
-    await deleteDoc(doc(db, "pending_users", userId));
+  const handleRejectUser = (userId: string) => {
+    setPendingUsers(pendingUsers.filter(u => u.id !== userId));
   };
 
 
