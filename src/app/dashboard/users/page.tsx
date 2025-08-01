@@ -41,18 +41,20 @@ export default function UsersPage() {
       const usersSnapshot = await getDocs(usersCollection);
       const usersList = usersSnapshot.docs.map(doc => {
           const data = doc.data();
-          return { 
-              id: doc.id, 
+          return {
+              id: doc.id,
               ...data,
               status: mapStatus(data.status)
           } as User
       });
       setUsers(usersList);
 
-      const pendingUsersCollection = collection(db, "pending_users");
-      const pendingUsersSnapshot = await getDocs(pendingUsersCollection);
-      const pendingUsersList = pendingUsersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-      setPendingUsers(pendingUsersList);
+      if (isAdmin) {
+        const pendingUsersCollection = collection(db, "pending_users");
+        const pendingUsersSnapshot = await getDocs(pendingUsersCollection);
+        const pendingUsersList = pendingUsersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+        setPendingUsers(pendingUsersList);
+      }
 
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -64,13 +66,11 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, isAdmin]);
 
   useEffect(() => {
-    if (isAdmin) {
       fetchUsers();
-    }
-  }, [isAdmin, fetchUsers]);
+  }, [fetchUsers]);
 
   const handleAddUser = () => {
     setEditingUser(null);
@@ -81,7 +81,7 @@ export default function UsersPage() {
     setEditingUser(user);
     setIsFormOpen(true);
   };
-  
+
   const handleDeleteUser = async (userId: string) => {
     if (!isAdmin) return;
     try {
@@ -123,14 +123,18 @@ export default function UsersPage() {
     setIsFormOpen(false);
     setEditingUser(null);
   };
-  
+
   const handleApproveUser = async (user: User) => {
     if(!user.id || !isAdmin) return;
     try {
-        await setDoc(doc(db, "users", user.id), { name: user.name, email: user.email, role: user.role, status: true });
+        // NOTE: Creating a user in Firebase Auth requires the Admin SDK on a backend.
+        // This action only creates the user in the Firestore `users` collection.
+        // The user must be created manually in the Firebase Authentication console.
+        const newUserDoc = { name: user.name, email: user.email, role: user.role, status: true };
+        await setDoc(doc(db, "users", user.id), newUserDoc);
         await deleteDoc(doc(db, "pending_users", user.id));
         fetchUsers();
-        toast({ title: "Éxito", description: "Usuario aprobado." });
+        toast({ title: "Éxito", description: `Usuario ${user.name} aprobado. Recuerde crearlo en Firebase Authentication.` });
     } catch (error) {
         console.error("Error approving user: ", error);
         toast({ title: "Error", description: "No se pudo aprobar el usuario.", variant: "destructive" });
@@ -141,14 +145,14 @@ export default function UsersPage() {
     if (!isAdmin) return;
     try {
         await deleteDoc(doc(db, "pending_users", userId));
-        setPendingUsers(pendingUsers.filter(u => u.id !== userId));
+        fetchUsers(); // Refresh data
         toast({ title: "Éxito", description: "Usuario rechazado." });
     } catch (error) {
         console.error("Error rejecting user: ", error);
         toast({ title: "Error", description: "No se pudo rechazar el usuario.", variant: "destructive" });
     }
   };
-  
+
   const handleToggleStatus = async (userId: string) => {
     if (!isAdmin) return;
     const user = users.find(u => u.id === userId);
@@ -178,7 +182,7 @@ export default function UsersPage() {
         toast({ title: "Error", description: "No se pudo cambiar el rol.", variant: "destructive" });
     }
   };
-  
+
   const handlePendingUserRoleChange = async (userId: string, newRole: "Admin" | "Usuario" | "Proveedor") => {
     if (!isAdmin) return;
     try {
@@ -353,7 +357,7 @@ export default function UsersPage() {
                 )}
             </CardContent>
         </Card>
-        {isAdmin && <UserForm 
+        {isAdmin && <UserForm
             isOpen={isFormOpen}
             onOpenChange={setIsFormOpen}
             onSave={handleSaveUser}
@@ -361,7 +365,4 @@ export default function UsersPage() {
         />}
     </div>
   )
-
-    
-
-    
+}
