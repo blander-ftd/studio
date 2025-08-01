@@ -47,8 +47,9 @@ export default function LoginPage() {
 
   const handleSaveUser = async (user: User) => {
     try {
+        const { password, ...userData } = user;
         const newUserRef = doc(collection(db, "pending_users"));
-        await setDoc(newUserRef, { ...user, id: newUserRef.id, status: 'Pending' });
+        await setDoc(newUserRef, { ...userData, id: newUserRef.id, status: 'Pending', role: 'Proveedor' });
         toast({
             title: "Solicitud Enviada",
             description: "Su solicitud de registro ha sido enviada para aprobación.",
@@ -126,5 +127,3 @@ export default function LoginPage() {
     </>
   )
 }
-
-    

@@ -36,9 +36,10 @@ const userSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
   email: z.string().email("Por favor ingrese un email válido."),
-  role: z.enum(["Admin", "Usuario", "Proveedor"]),
+  role: z.enum(["Admin", "Usuario", "Proveedor"]).optional(),
   status: z.enum(["Active", "Inactive", "Pending"]).optional(),
   message: z.string().optional(),
+  password: z.string().optional(),
 });
 
 export type User = z.infer<typeof userSchema>;
@@ -58,6 +59,7 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
       email: "",
       role: "Proveedor",
       message: "",
+      password: "",
     },
   });
 
@@ -71,7 +73,8 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
             email: "",
             role: "Proveedor",
             status: "Pending",
-            message: ""
+            message: "",
+            password: ""
           });
         }
     }
@@ -144,6 +147,20 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
                 )}
               />
             ) : (
+                <>
+                <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Contraseña</FormLabel>
+                        <FormControl>
+                            <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
                 <FormField
                 control={form.control}
                 name="message"
@@ -160,6 +177,7 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
                     </FormItem>
                 )}
                 />
+                </>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -173,5 +191,3 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
     </Dialog>
   );
 }
-
-    

@@ -127,14 +127,11 @@ export default function UsersPage() {
   const handleApproveUser = async (user: User) => {
     if(!user.id || !isAdmin) return;
     try {
-        // NOTE: Creating a user in Firebase Auth requires the Admin SDK on a backend.
-        // This action only creates the user in the Firestore `users` collection.
-        // The user must be created manually in the Firebase Authentication console.
         const newUserDoc = { name: user.name, email: user.email, role: user.role, status: true };
         await setDoc(doc(db, "users", user.id), newUserDoc);
         await deleteDoc(doc(db, "pending_users", user.id));
         fetchUsers();
-        toast({ title: "Éxito", description: `Usuario ${user.name} aprobado. Recuerde crearlo en Firebase Authentication.` });
+        toast({ title: "Éxito", description: `Usuario ${user.name} aprobado.` });
     } catch (error) {
         console.error("Error approving user: ", error);
         toast({ title: "Error", description: "No se pudo aprobar el usuario.", variant: "destructive" });
@@ -368,5 +365,3 @@ export default function UsersPage() {
     </div>
   )
 }
-
-    
