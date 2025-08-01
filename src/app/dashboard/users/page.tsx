@@ -215,19 +215,19 @@ export default function UsersPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Nombre</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Mensaje</TableHead>
-                                <TableHead>Rol</TableHead>
-                                <TableHead className="text-right">Acciones</TableHead>
+                                <TableHead className="w-[20%]">Nombre</TableHead>
+                                <TableHead className="w-[20%]">Email</TableHead>
+                                <TableHead className="w-[30%]">Mensaje</TableHead>
+                                <TableHead className="w-[15%]">Rol</TableHead>
+                                <TableHead className="text-right w-[15%]">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {pendingUsers.map((user) => (
                                 <TableRow key={user.id}>
-                                    <TableCell className="font-medium">{user.name}</TableCell>
-                                    <TableCell>{user.email}</TableCell>
-                                    <TableCell className="text-muted-foreground max-w-xs truncate">{user.message || "-"}</TableCell>
+                                    <TableCell className="font-medium truncate">{user.name}</TableCell>
+                                    <TableCell className="truncate">{user.email}</TableCell>
+                                    <TableCell className="text-muted-foreground truncate">{user.message || "-"}</TableCell>
                                     <TableCell>
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -250,14 +250,16 @@ export default function UsersPage() {
                                       </DropdownMenu>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => handleApproveUser(user)}>
-                                            <Check className="h-4 w-4 text-green-500" />
-                                            <span className="sr-only">Aprobar</span>
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => handleRejectUser(user.id!)}>
-                                            <X className="h-4 w-4 text-red-500" />
-                                            <span className="sr-only">Rechazar</span>
-                                        </Button>
+                                        <div className="flex justify-end gap-1">
+                                            <Button variant="ghost" size="icon" onClick={() => handleApproveUser(user)}>
+                                                <Check className="h-4 w-4 text-green-500" />
+                                                <span className="sr-only">Aprobar</span>
+                                            </Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleRejectUser(user.id!)}>
+                                                <X className="h-4 w-4 text-red-500" />
+                                                <span className="sr-only">Rechazar</span>
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -366,3 +368,5 @@ export default function UsersPage() {
     </div>
   )
 }
+
+    
