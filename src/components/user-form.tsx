@@ -30,15 +30,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "./ui/textarea";
 
 const userSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
   email: z.string().email("Por favor ingrese un email válido."),
-  role: z.enum(["Admin", "Usuario", "Proveedor"], {
-    required_error: "Por favor seleccione un rol.",
-  }),
+  role: z.enum(["Admin", "Usuario", "Proveedor"]),
   status: z.enum(["Active", "Inactive", "Pending"]).optional(),
+  message: z.string().optional(),
 });
 
 export type User = z.infer<typeof userSchema>;
@@ -56,7 +56,8 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
     defaultValues: {
       name: "",
       email: "",
-      role: undefined,
+      role: "Proveedor",
+      message: "",
     },
   });
 
@@ -67,8 +68,9 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
       form.reset({
         name: "",
         email: "",
-        role: undefined,
-        status: "Pending"
+        role: "Proveedor",
+        status: "Pending",
+        message: ""
       });
     }
   }, [user, form, isOpen]);
@@ -116,28 +118,47 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rol</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+            {user ? (
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rol</FormLabel>
+                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccione un rol" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Admin">Admin</SelectItem>
+                        <SelectItem value="Usuario">Usuario</SelectItem>
+                        <SelectItem value="Proveedor">Proveedor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+                <FormField
+                control={form.control}
+                name="message"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Mensaje para el Administrador (Opcional)</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccione un rol" />
-                      </SelectTrigger>
+                        <Textarea
+                        placeholder="Escriba un mensaje corto..."
+                        {...field}
+                        />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                      <SelectItem value="Usuario">Usuario</SelectItem>
-                      <SelectItem value="Proveedor">Proveedor</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar

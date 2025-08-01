@@ -53,7 +53,12 @@ export default function UsersPage() {
       setUsers(users.map(u => u.id === user.id ? user : u));
     } else {
       // Add new user to pending
-      setPendingUsers([...pendingUsers, { ...user, id: crypto.randomUUID(), status: 'Pending' }]);
+      const newUser = { 
+        ...user, 
+        id: crypto.randomUUID(), 
+        status: 'Pending' as const,
+      };
+      setPendingUsers([...pendingUsers, newUser]);
     }
     setIsFormOpen(false);
     setEditingUser(null);
@@ -94,7 +99,7 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold font-headline tracking-tight">
             Usuarios
           </h1>
-          {isAdmin && <Button onClick={handleAddUser}>Agregar Usuario</Button>}
+          <Button onClick={handleAddUser}>Agregar Usuario</Button>
         </div>
 
         {isAdmin && pendingUsers.length > 0 && (
@@ -241,12 +246,12 @@ export default function UsersPage() {
                 </Table>
             </CardContent>
         </Card>
-        {isAdmin && <UserForm 
+        <UserForm 
             isOpen={isFormOpen}
             onOpenChange={setIsFormOpen}
             onSave={handleSaveUser}
             user={editingUser}
-        />}
+        />
     </div>
   )
 }
