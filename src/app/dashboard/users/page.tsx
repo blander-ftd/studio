@@ -49,16 +49,10 @@ export default function UsersPage() {
       });
       setUsers(usersList);
 
-      // Temporarily disabling pending users fetch until read access is granted in Firestore rules.
-      // To re-enable:
-      // 1. Ensure firestore.rules allows read on 'pending_users'.
-      // 2. Uncomment the following lines.
-      /*
       const pendingUsersCollection = collection(db, "pending_users");
       const pendingUsersSnapshot = await getDocs(pendingUsersCollection);
       const pendingUsersList = pendingUsersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
       setPendingUsers(pendingUsersList);
-      */
 
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -367,5 +361,7 @@ export default function UsersPage() {
         />}
     </div>
   )
+
+    
 
     
