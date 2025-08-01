@@ -68,6 +68,7 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
         name: "",
         email: "",
         role: undefined,
+        status: "Pending"
       });
     }
   }, [user, form, isOpen]);
@@ -84,7 +85,7 @@ export function UserForm({ isOpen, onOpenChange, onSave, user }: UserFormProps) 
           <DialogDescription>
             {user
               ? "Edite los detalles del usuario a continuación."
-              : "Complete el formulario para agregar un nuevo usuario."}
+              : "Complete el formulario para agregar un nuevo usuario. El usuario quedará pendiente de aprobación."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
