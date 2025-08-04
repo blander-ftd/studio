@@ -1,7 +1,10 @@
 
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 type Role = 'Admin' | 'Usuario' | 'Proveedor';
 
@@ -15,29 +18,61 @@ interface User {
 
 interface AuthContextType {
   user: User;
-  setUserRole: (role: Role) => void;
+  loading: boolean;
+  setUser: React.Dispatch<React.SetStateAction<User>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const initialUser: User = {
-    id: '1',
-    name: 'John Pilot',
-    email: 'john@filecatalyst.com',
-    role: 'Admin',
-    status: 'Active',
+const defaultUser: User = {
+    id: 'anonymous',
+    name: 'Guest User',
+    email: '',
+    role: 'Proveedor', 
+    status: 'Pending',
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User>(initialUser);
+  const [user, setUser] = useState<User>(defaultUser);
+  const [loading, setLoading] = useState(true);
 
-  const setUserRole = (role: Role) => {
-    setUser(prevUser => ({ ...prevUser, role }));
-  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+        if (firebaseUser && firebaseUser.email) {
+            const userDocRef = doc(db, 'users', firebaseUser.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                setUser({
+                    id: firebaseUser.uid,
+                    name: userData.name || firebaseUser.displayName || 'User',
+                    email: firebaseUser.email,
+                    role: userData.role || 'Proveedor',
+                    status: userData.status ? 'Active' : 'Inactive',
+                });
+            } else {
+                 // Fallback for users that exist in Auth but not in 'users' collection
+                 // This could be a newly approved user, or a test user
+                setUser({
+                    id: firebaseUser.uid,
+                    name: firebaseUser.displayName || 'User',
+                    email: firebaseUser.email,
+                    role: 'Proveedor',
+                    status: 'Active'
+                });
+            }
+        } else {
+            setUser(defaultUser);
+        }
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
   
-  const value = { user, setUserRole };
+  const value = { user, loading, setUser };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{loading ? <div>Loading...</div> : children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextType => {

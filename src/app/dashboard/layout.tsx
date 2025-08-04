@@ -2,10 +2,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { FileCatalystLogo } from "@/components/icons";
-import { Sparkles, PanelLeft, Users, ChevronDown, FileSpreadsheet } from "lucide-react";
+import { Sparkles, PanelLeft, Users, ChevronDown, FileSpreadsheet, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { FilesProvider } from "@/context/files-context";
 import { AuthProvider, useAuth } from "@/context/auth-context";
@@ -18,9 +18,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
 
-function RoleSwitcher() {
-    const { user, setUserRole } = useAuth();
+function UserMenu() {
+    const { user } = useAuth();
+    const router = useRouter();
+    const { toast } = useToast();
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            router.push('/login');
+            toast({
+                title: "Sesión Cerrada",
+                description: "Has cerrado sesión correctamente."
+            })
+        } catch (error) {
+            console.error("Error signing out: ", error);
+            toast({
+                title: "Error",
+                description: "No se pudo cerrar la sesión. Inténtalo de nuevo.",
+                variant: "destructive"
+            })
+        }
+    }
     
     return (
         <DropdownMenu>
@@ -34,11 +57,12 @@ function RoleSwitcher() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Cambiar Rol</DropdownMenuLabel>
+                <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setUserRole('Admin')}>Admin</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setUserRole('Usuario')}>Usuario</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setUserRole('Proveedor')}>Proveedor</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Cerrar Sesión</span>
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     )
@@ -85,7 +109,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             </div>
             <div className="mt-auto p-4">
               <div className="flex items-center gap-2">
-                 <RoleSwitcher />
+                 <UserMenu />
               </div>
             </div>
           </nav>
