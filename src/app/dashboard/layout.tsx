@@ -151,7 +151,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
           </header>
           <main className="flex-1 p-4 sm:px-6 sm:py-0">{children}</main>
           <footer className="text-center text-xs text-muted-foreground p-4">
-            Informacion distribuida para uso unico de FARMATODO S.A.
+            En Farmatodo, tu privacidad es nuestra prioridad. Toda la información que compartas con nosotros es "confidencial" y solo la usaremos para los fines de nuestra relación comercial. Nos comprometemos a cuidarla y no compartirla con terceros.
           </footer>
         </div>
       </div>
