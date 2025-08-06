@@ -13,26 +13,19 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "apphosting": {
-    "backendId": "transfer-backend",
-    "rootDir": "/",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
-      "functions"
-    ]
+  "storage": {
+    "rules": "storage.rules"
   },
   "hosting": {
-    "public": ".next",
+    "source": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ]
-  },
-  "storage": {
-    "rules": "storage.rules"
+    ],
+    "frameworksBackend": {
+      "id": "transfer-backend",
+      "region": "us-central1"
+    }
   }
 }
