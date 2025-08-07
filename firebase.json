@@ -24,8 +24,10 @@
       "**/node_modules/**"
     ],
     "frameworksBackend": {
-      "id": "transfer-backend",
-      "region": "us-central1"
+          "id": "transfer-backend",
+          "region": "us-central1",
+          "secrets": ["GOOGLE_API_KEY"]
     }
+    
   }
 }
