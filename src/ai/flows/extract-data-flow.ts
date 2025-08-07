@@ -19,6 +19,8 @@ const ExtractDataInputSchema = z.object({
       "A file (Excel or PDF) as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
     ),
   fileType: z.enum(['pdf', 'excel']).describe('The type of the file provided.'),
+  fileName: z.string().optional().describe('Original file name (optional).'),
+  fileSize: z.number().optional().describe('Original file size in bytes (optional).'),
 });
 
 export type ExtractDataInput = z.infer<typeof ExtractDataInputSchema>;
@@ -51,7 +53,7 @@ The JSON schema is:
   "products": [
     {
       "provider_code": "string",
-      "product_code": "string",
+      "product_code": "integer",
       "product_description": "string",
       "brand": "string",
       "category": "string",

@@ -39,7 +39,7 @@ const userSchema = z.object({
   role: z.enum(["Admin", "Usuario", "Proveedor"]).optional(),
   status: z.enum(["Active", "Inactive", "Pending"]).optional(),
   message: z.string().optional(),
-  password: z.string().optional(),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
 });
 
 export type User = z.infer<typeof userSchema>;

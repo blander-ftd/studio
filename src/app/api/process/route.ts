@@ -13,8 +13,12 @@ export async function POST(request: Request) {
 
     // Save the processed data to Firestore
     if (processedData && processedData.products && processedData.products.length > 0) {
-      await dbAdmin.collection("processed_files").add({
+      const { fileName, fileSize, fileType } = body as any;
+      await dbAdmin.collection('processed_files').add({
         products: processedData.products,
+        file_name: fileName ?? null,
+        file_size: fileSize ?? null,
+        file_type: fileType,
         created_time: FieldValue.serverTimestamp(),
       });
     }

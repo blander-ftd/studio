@@ -46,6 +46,8 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({
           fileDataUri: fileData,
           fileType: fileTypeForRequest,
+          fileName: fileToProcess.name,
+          fileSize: fileToProcess.size,
         }),
       });
 
