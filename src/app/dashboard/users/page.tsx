@@ -125,18 +125,45 @@ export default function UsersPage() {
   };
 
   const handleApproveUser = async (user: User) => {
-    if(!user.id || !isAdmin) return;
+    if (!user.id || !isAdmin) return;
     try {
+        const pendingUserRef = doc(db, "pending_users", user.id);
+        const pendingUserSnap = await getDoc(pendingUserRef);
+
+        if (!pendingUserSnap.exists()) {
+            throw new Error("Pending user not found.");
+        }
+
+        const pendingUserData = pendingUserSnap.data();
+        const password = pendingUserData.password;
+
+        if (!password) {
+            throw new Error("Password not found for pending user.");
+        }
+        
+        // Create user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, user.email, password);
+        const newUserId = userCredential.user.uid;
+
+        // Create user document in 'users' collection with the new UID
         const newUserDoc = { name: user.name, email: user.email, role: user.role, status: true };
-        await setDoc(doc(db, "users", user.id), newUserDoc);
-        await deleteDoc(doc(db, "pending_users", user.id));
+        await setDoc(doc(db, "users", newUserId), newUserDoc);
+
+        // Delete the pending user document
+        await deleteDoc(pendingUserRef);
+
         fetchUsers();
-        toast({ title: "Éxito", description: `Usuario ${user.name} aprobado.` });
-    } catch (error) {
+        toast({ title: "Éxito", description: `Usuario ${user.name} aprobado y creado.` });
+    } catch (error: any) {
         console.error("Error approving user: ", error);
-        toast({ title: "Error", description: "No se pudo aprobar el usuario.", variant: "destructive" });
+        toast({ 
+            title: "Error", 
+            description: `No se pudo aprobar el usuario: ${error.message}`, 
+            variant: "destructive" 
+        });
     }
-  };
+};
+
 
   const handleRejectUser = async (userId: string) => {
     if (!isAdmin) return;

@@ -1,0 +1,14 @@
+{   "created_time": timestamp,
+    "products": [
+        {
+            "brand": string,
+            "category": string,
+            "discount_description": string,
+            "minimum_purchase_quantity": number,
+            "offer_conditions": string,
+            "product_code": integer,
+            "product_description": string,
+            "provider_code": string
+        }
+    ]
+}
