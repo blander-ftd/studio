@@ -1,6 +1,8 @@
 
 import { NextResponse } from 'next/server';
 import { extractData, type ExtractDataInput } from '@/ai/flows/extract-data-flow';
+import { dbAdmin } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(request: Request) {
   try {
@@ -9,30 +11,29 @@ export async function POST(request: Request) {
     // Call the Genkit flow
     const processedData = await extractData(body);
 
+    // Save the processed data to Firestore
+    if (processedData && processedData.products && processedData.products.length > 0) {
+      await dbAdmin.collection("processed_files").add({
+        products: processedData.products,
+        created_time: FieldValue.serverTimestamp(),
+      });
+    }
+
     return NextResponse.json(processedData);
 
   } catch (error: any) {
     console.error('Error in processing route:', error);
     
     const errorMessage = error.message || 'An unknown error occurred';
-    const errorStack = error.stack || 'No stack trace available';
-
-    // Log the full error for debugging
-    console.error(`Error processing file: ${errorMessage}`, {
-      stack: errorStack,
-      details: error.cause // Genkit often includes more details in the cause property
-    });
-
-    return new NextResponse(
-        JSON.stringify({ 
+    
+    return NextResponse.json(
+        { 
             message: 'Internal Server Error during file processing.', 
             error: errorMessage,
-        }), 
+            details: error.cause || null
+        }, 
         { 
             status: 500,
-            headers: {
-                'Content-Type': 'application/json'
-            }
         }
     );
   }

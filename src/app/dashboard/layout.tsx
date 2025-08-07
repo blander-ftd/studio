@@ -76,7 +76,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/dashboard", icon: Sparkles, label: "Procesador de Archivos", role: ['Admin', 'Usuario', 'Proveedor'] },
     { href: "/dashboard/excel-export", icon: FileSpreadsheet, label: "Exportar a Excel", role: ['Admin', 'Usuario'] },
-    { href: "/dashboard/users", icon: Users, label: "Usuarios", role: ['Admin', 'Usuario'] },
+    { href: "/dashboard/users", icon: Users, label: "Usuarios", role: ['Admin'] },
   ].filter(item => item.role.includes(user.role));
 
   return (

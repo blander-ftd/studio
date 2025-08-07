@@ -9,9 +9,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { MoreHorizontal, Check, X, ChevronDown, Loader2 } from "lucide-react";
 import { UserForm, User } from "@/components/user-form";
 import { useAuth } from "@/context/auth-context";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 // Helper to map Firestore boolean to string status
 const mapStatus = (status: boolean | string | undefined): "Active" | "Inactive" => {
@@ -112,7 +113,9 @@ export default function UsersPage() {
       // Add new user (as pending)
       try {
         const newUserRef = doc(collection(db, "pending_users"));
-        await setDoc(newUserRef, { ...user, id: newUserRef.id, status: 'Pending' });
+        // Don't save password to firestore, handle it on approval
+        const { password, ...userData } = user;
+        await setDoc(newUserRef, { ...userData, id: newUserRef.id, status: 'Pending', password: user.password });
         fetchUsers(); // Refresh data
         toast({ title: "Éxito", description: "Solicitud de usuario enviada." });
       } catch (error) {
@@ -163,7 +166,6 @@ export default function UsersPage() {
         });
     }
 };
-
 
   const handleRejectUser = async (userId: string) => {
     if (!isAdmin) return;
@@ -392,3 +394,5 @@ export default function UsersPage() {
     </div>
   )
 }
+
+    
