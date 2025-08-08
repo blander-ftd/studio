@@ -12,7 +12,12 @@ runConfig:
 env:
   - variable: GOOGLE_API_KEY
     secret: GOOGLE_API_KEY_SECRET
-
+  - variable: CLOUD_RUN_EXPORT_URL
+    secret: CLOUD_RUN_EXPORT_URL
+  - variable: CLOUD_RUN_PRIVATE_KEY
+    secret: CLOUD_RUN_PRIVATE_KEY
+  - variable: BASE_PROMPT
+    secret: BASE_PROMPT
 # Grant access to secrets in Cloud Secret Manager.
 # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
 # - variable: MY_SECRET
