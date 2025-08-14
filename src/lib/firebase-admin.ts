@@ -17,6 +17,7 @@ const getFirebaseAdminApp = (): App => {
   // No explicit credential configuration is needed.
   const app = initializeApp({
     credential: applicationDefault(),
+    projectId: process.env.GOOGLE_PROJECT_ID,
   });
   return app;
 }

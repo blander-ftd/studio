@@ -11,14 +11,14 @@ export async function POST(request: Request) {
     // Call the Genkit flow
     const processedData = await extractData(body);
 
-    // Save the processed data to Firestore
-    if (processedData && processedData.products && processedData.products.length > 0) {
-      const { fileName, fileSize, fileType } = body as any;
+    console.log('Data from Gemini:', JSON.stringify(processedData, null, 2));
+
+    // Save the processed data to Firestore only in production
+    if (process.env.NODE_ENV === 'production' && processedData) {
+      const { general_data, promotions } = processedData;
       await dbAdmin.collection('processed_files').add({
-        products: processedData.products,
-        file_name: fileName ?? null,
-        file_size: fileSize ?? null,
-        file_type: fileType,
+        ...general_data,
+        ...promotions,
         created_time: FieldValue.serverTimestamp(),
       });
     }
