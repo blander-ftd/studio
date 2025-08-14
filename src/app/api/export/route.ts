@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
+import { getSecret } from "@/lib/secret-manager";
 
 // Server-side proxy to call the Cloud Run service and bypass browser CORS.
 // Reads dates from query params and forwards them as headers expected by the upstream.
 
 const UPSTREAM_URL = process.env.CLOUD_RUN_EXPORT_URL ||
   "https://transfer-argentina-request-633589706319.us-central1.run.app";
-
-const PRIVATE_KEY = process.env.CLOUD_RUN_PRIVATE_KEY || "";
+let PRIVATE_KEY = process.env.CLOUD_RUN_PRIVATE_KEY || "";
 
 export async function GET(request: Request) {
   try {
+    if (!PRIVATE_KEY) {
+      try {
+        PRIVATE_KEY = await getSecret("CLOUD_RUN_PRIVATE_KEY");
+      } catch {}
+    }
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");

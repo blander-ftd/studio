@@ -1,6 +1,6 @@
 import "server-only";
 
-import { initializeApp, getApps, App, applicationDefault } from "firebase-admin/app";
+import { initializeApp, getApps, App, applicationDefault, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 
@@ -12,11 +12,21 @@ const getFirebaseAdminApp = (): App => {
     return getApps()[0];
   }
 
-  // In a deployed Google Cloud environment (like App Hosting), the SDK 
-  // automatically uses the project's service account credentials via applicationDefault().
-  // No explicit credential configuration is needed.
+  // Try to initialize using explicit service account credentials from env vars
+  // for local development. Fall back to application default credentials in GCP.
+  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT;
+
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+  const useExplicitCreds = Boolean(projectId && clientEmail && privateKey);
+
   const app = initializeApp({
-    credential: applicationDefault(),
+    credential: useExplicitCreds
+      ? cert({ projectId: projectId!, clientEmail: clientEmail!, privateKey: privateKey! })
+      : applicationDefault(),
+    // Providing projectId ensures Google libraries can detect it even with ADC
+    projectId: projectId,
   });
   return app;
 }

@@ -151,7 +151,7 @@ export function FileUploader({ onUploadComplete, existingFiles }: FileUploaderPr
             <p className="mb-2 text-sm text-center text-muted-foreground">
                 <span className="font-semibold text-primary">Haga clic para cargar</span> o arrastre y suelte
             </p>
-            <p className="text-xs text-muted-foreground">Soporta: .pdf, .xls, .xlsx</p>
+            <p className="text-xs text-muted-foreground">Formatos que soporta: .pdf, .xls, .xlsx</p>
         </div>
         {uploadingFiles.length > 0 && (
             <div className="space-y-2">

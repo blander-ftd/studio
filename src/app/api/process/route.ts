@@ -1,5 +1,9 @@
 
 import { NextResponse } from 'next/server';
+// Ensure this route runs on the Node.js runtime (required for Buffer/xlsx, firebase-admin, etc.)
+export const runtime = 'nodejs';
+// Disable static rendering/caching
+export const dynamic = 'force-dynamic';
 import { extractData, type ExtractDataInput } from '@/ai/flows/extract-data-flow';
 import { dbAdmin } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';

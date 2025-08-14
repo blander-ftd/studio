@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
+    "dev:node": "next dev --no-turbo -p 9002",
+    "clean:next": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true});}catch(e){}\"",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
@@ -15,6 +17,7 @@
     "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
     "@genkit-ai/googleai": "^1.14.1",
     "@genkit-ai/next": "^1.14.1",
+    "@google-cloud/secret-manager": "^5.6.0",
     "@hookform/resolvers": "^4.1.3",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",

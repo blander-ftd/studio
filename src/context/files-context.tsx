@@ -52,8 +52,20 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Error from processing API: ${errorText}`);
+        // Try to parse JSON error, otherwise fall back to text and strip HTML
+        let errorPayload: any = null;
+        let raw = '';
+        try {
+          errorPayload = await response.clone().json();
+        } catch {
+          raw = await response.text();
+        }
+
+        const cleanText = errorPayload
+          ? JSON.stringify(errorPayload)
+          : raw.replace(/<[^>]*>/g, '').slice(0, 1000);
+
+        throw new Error(`Error from processing API: ${cleanText}`);
       }
 
       const result = await response.json();
