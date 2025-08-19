@@ -111,9 +111,16 @@ const extractDataFlow = ai.defineFlow(
         }
         const buffer = Buffer.from(base64Data, 'base64');
         const workbook = xlsx.read(buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        fileContent = xlsx.utils.sheet_to_csv(worksheet);
+
+        // Concatenate all sheets into a single CSV string, separated by sheet name headers
+        let allSheetsCsv = '';
+        workbook.SheetNames.forEach((sheetName, idx) => {
+          const worksheet = workbook.Sheets[sheetName];
+          const csv = xlsx.utils.sheet_to_csv(worksheet);
+          // Add a header for each sheet to distinguish them
+          allSheetsCsv += `--- Sheet: ${sheetName} ---\n${csv}\n`;
+        });
+        fileContent = allSheetsCsv;
       } catch (e: any) {
         console.error("Error parsing excel file: ", e);
         // Throw a more specific error that can be caught by the API route
