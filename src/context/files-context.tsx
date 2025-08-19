@@ -147,7 +147,10 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
       const newUniqueFiles = filesWithStatus.filter(
         (newFile) => !prevFiles.some((existingFile) => existingFile.id === newFile.id)
       );
-      return [...newUniqueFiles, ...prevFiles];
+      const allFiles = [...newUniqueFiles, ...prevFiles];
+      allFiles.sort((a, b) => a.uploadDate.getTime() - b.uploadDate.getTime()); // ascending
+      allFiles.reverse(); // now descending
+      return allFiles;
     });
   }, [user]);
 
