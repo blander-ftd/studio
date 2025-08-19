@@ -140,13 +140,27 @@ const extractDataFlow = ai.defineFlow(
       output.general_data.file_name = input.fileName;
     }
     
+    // Handle cases where promotions might be missing or have unexpected structure
+    if (!output.promotions) {
+      output.promotions = { products: [], combos: [] };
+    }
+    
+    // Ensure products and combos arrays exist
+    if (!Array.isArray(output.promotions.products)) {
+      output.promotions.products = [];
+    }
+    
+    if (!Array.isArray(output.promotions.combos)) {
+      output.promotions.combos = [];
+    }
+    
     // Final validation to ensure data integrity before returning
-    const validatedProducts = (output.promotions?.products || []).filter(p => {
+    const validatedProducts = output.promotions.products.filter(p => {
       const { success } = ProductPromotionSchema.safeParse(p);
       return success;
     });
 
-    const validatedCombos = (output.promotions?.combos || []).filter(c => {
+    const validatedCombos = output.promotions.combos.filter(c => {
         const { success } = ComboPromotionSchema.safeParse(c);
         return success;
     });

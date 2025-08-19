@@ -23,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Eye } from "lucide-react";
+import Link from "next/link";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 
@@ -33,6 +35,7 @@ interface ProcessedFile {
   uploaded_by?: {
     name: string;
   };
+  processedData?: any;
 }
 
 export default function ExcelExportPage() {
@@ -76,6 +79,17 @@ export default function ExcelExportPage() {
 
     fetchFiles();
   }, [selectedMonth, selectedYear, toast]);
+
+  const handleViewClick = (file: ProcessedFile) => {
+    // Store file data in sessionStorage for the detail view
+    try {
+      sessionStorage.setItem(`selectedFile_${file.id}`, JSON.stringify(file));
+    } catch (error) {
+      console.error("Could not save file to sessionStorage", error);
+    }
+  };
+
+
   
   const handleGenerateExcel = async (range?: DateRange) => {
     const targetRange = range || date;
@@ -100,7 +114,7 @@ export default function ExcelExportPage() {
     const endDate = formatDate(targetRange.to);
 
     toast({
-      title: "Generación iniciada",
+      title: "Procesamiento iniciado",
       description: `Solicitando datos del ${startDate} al ${endDate}...`,
     });
 
@@ -196,26 +210,25 @@ export default function ExcelExportPage() {
         return;
       }
 
-      const headers = Array.from(
-        rows.reduce<Set<string>>((set, row) => {
-          Object.keys(row ?? {}).forEach((k) => set.add(k));
-          return set;
-        }, new Set<string>())
-      );
+             // Dynamically import xlsx only when needed (client-side)
+       const XLSX = await import("xlsx");
+       const workbook = XLSX.utils.book_new();
 
-      // Dynamically import xlsx only when needed (client-side)
-      const XLSX = await import("xlsx");
+       // Generate simple view
+       const headers = Array.from(
+         rows.reduce<Set<string>>((set, row) => {
+           Object.keys(row ?? {}).forEach((k) => set.add(k));
+           return set;
+         }, new Set<string>())
+       );
 
-      // Prepare worksheet data: first row is headers, then each row is a product
-      const worksheetData = [
-        headers,
-        ...rows.map(row => headers.map(h => row[h] ?? ""))
-      ];
+       const worksheetData = [
+         headers,
+         ...rows.map(row => headers.map(h => row[h] ?? ""))
+       ];
 
-      // Create worksheet and workbook
-      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte");
+       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+       XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte");
 
       // Generate Excel file as Blob
       const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
@@ -230,7 +243,7 @@ export default function ExcelExportPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      toast({ title: "Exportación completa", description: `Descargado ${fileName}` });
+      toast({ title: "Exportación completa", description: `Datos exportados: ${fileName}` });
     } catch (error) {
       let message = "Error desconocido";
       if (error instanceof DOMException && error.name === "AbortError") {
@@ -243,7 +256,7 @@ export default function ExcelExportPage() {
         }
       }
 
-      toast({ title: "Error al generar", description: message, variant: "destructive" });
+      toast({ title: "Error al procesar", description: message, variant: "destructive" });
     }
   };
 
@@ -251,30 +264,30 @@ export default function ExcelExportPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold font-headline tracking-tight">
-            Exportar a Excel
+            Gestionar Datos
           </h1>
       </div>
        <Card>
             <CardHeader>
-                <CardTitle>Generar Reporte</CardTitle>
+                <CardTitle>Gestionar Reportes</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="grid gap-2">
                     <DateRangePicker date={date} onDateChange={setDate} />
                     <p className="text-sm text-muted-foreground">
-                        Seleccione el rango de fechas para la exportación.
+                        Seleccione el rango de fechas para gestionar los datos.
                     </p>
                 </div>
-                <Button onClick={() => handleGenerateExcel()} className="w-full sm:w-auto">
-                    <Download className="mr-2 h-4 w-4" />
-                    Generar Excel
-                </Button>
+                                 <Button onClick={() => handleGenerateExcel()} className="w-full sm:w-auto">
+                     <Download className="mr-2 h-4 w-4" />
+                     Exportar Datos
+                 </Button>
             </CardContent>
         </Card>
 
         <Card>
-            <CardHeader>
-                <CardTitle>Archivos Procesados del Mes</CardTitle>
+                         <CardHeader>
+                 <CardTitle>Datos Procesados del Mes</CardTitle>
                 <div className="flex items-center gap-4 pt-2">
                     <Select
                         value={String(selectedMonth)}
@@ -331,25 +344,38 @@ export default function ExcelExportPage() {
                                     <TableCell>
                                         {file.created_time.toDate().toLocaleString('es-ES')}
                                     </TableCell>
-                                    <TableCell className="text-right">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => handleGenerateExcel({
-                                                from: file.created_time.toDate(),
-                                                to: file.created_time.toDate()
-                                            })}
-                                        >
-                                            <Download className="h-4 w-4" />
-                                        </Button>
-                                    </TableCell>
+                                                                         <TableCell className="text-right">
+                                         <div className="flex items-center justify-end gap-2">
+                                             <Button
+                                                 variant="ghost"
+                                                 size="icon"
+                                                 asChild
+                                                 onClick={() => handleViewClick(file)}
+                                             >
+                                                 <Link href={`/dashboard/file/${file.id}`}>
+                                                     <Eye className="h-4 w-4" />
+                                                     <span className="sr-only">Ver</span>
+                                                 </Link>
+                                             </Button>
+                                             <Button
+                                                 variant="ghost"
+                                                 size="icon"
+                                                 onClick={() => handleGenerateExcel({
+                                                     from: file.created_time.toDate(),
+                                                     to: file.created_time.toDate()
+                                                 })}
+                                             >
+                                                 <Download className="h-4 w-4" />
+                                             </Button>
+                                         </div>
+                                     </TableCell>
                                 </TableRow>
                             ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={4}>No se encontraron archivos para el mes seleccionado.</TableCell>
-                            </TableRow>
-                        )}
+                                                 ) : (
+                             <TableRow>
+                                 <TableCell colSpan={4}>No se encontraron datos para el mes seleccionado.</TableCell>
+                             </TableRow>
+                         )}
                     </TableBody>
                 </Table>
             </CardContent>

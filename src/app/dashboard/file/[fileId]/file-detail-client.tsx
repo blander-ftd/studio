@@ -65,8 +65,8 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
                     <TableCell>{product.product_description}</TableCell>
                     <TableCell>{product.brand}</TableCell>
                     <TableCell>{product.category}</TableCell>
-                    <TableCell>{product.psl_discount ? `${(product.psl_discount * 100).toFixed(2)}%` : '-'}</TableCell>
-                    <TableCell>{product.pvp_discount ? `${(product.pvp_discount * 100).toFixed(2)}%` : '-'}</TableCell>
+                    <TableCell>{product.psl_discount ? `${product.psl_discount.toFixed(2)}%` : '-'}</TableCell>
+                    <TableCell>{product.pvp_discount ? `${product.pvp_discount.toFixed(2)}%` : '-'}</TableCell>
                     <TableCell>{product.offer_conditions}</TableCell>
                   </TableRow>
                 ))}
