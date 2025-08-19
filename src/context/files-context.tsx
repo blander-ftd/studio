@@ -5,10 +5,11 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, Re
 import type { UploadedFile } from "@/types";
 import { FileSpreadsheet, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "./auth-context";
 
 interface FilesContextType {
   files: UploadedFile[];
-  handleUploadComplete: (uploadedFiles: (Omit<UploadedFile, "status" | "processedData" | "file" | "icon"> & { file: File })[]) => void;
+  handleUploadComplete: (uploadedFiles: (Omit<UploadedFile, "status" | "processedData" | "file" | "icon" | "uploadedBy"> & { file: File })[]) => void;
   handleRemoveFile: (fileId: string) => void;
   handleRetryProcess: (fileId: string) => void;
 }
@@ -19,6 +20,7 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const isProcessing = useRef(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const processFile = useCallback(async (fileToProcess: UploadedFile) => {
     try {
@@ -48,6 +50,7 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
           fileType: fileTypeForRequest,
           fileName: fileToProcess.name,
           fileSize: fileToProcess.size,
+          uploadedBy: fileToProcess.uploadedBy,
         }),
       });
 
@@ -118,7 +121,7 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
   }, [files, processFile]);
 
   const handleUploadComplete = useCallback((
-    uploadedFiles: (Omit<UploadedFile, "status" | "processedData" | "file" | "icon"> & { file: File })[]
+    uploadedFiles: (Omit<UploadedFile, "status" | "processedData" | "file" | "icon" | "uploadedBy"> & { file: File })[]
   ) => {
     const filesWithStatus: UploadedFile[] = uploadedFiles.map(newFile => {
        const fileType = newFile.file.type === 'application/pdf' ? 'PDF' : 'Excel';
@@ -132,6 +135,11 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
           status: "Pendiente",
           processedData: null,
           icon: icon,
+          uploadedBy: {
+            id: user.id || "",
+            name: user.name,
+            email: user.email,
+          },
        }
     });
     
@@ -141,7 +149,7 @@ export const FilesProvider = ({ children }: { children: ReactNode }) => {
       );
       return [...newUniqueFiles, ...prevFiles];
     });
-  }, []);
+  }, [user]);
 
   const handleRetryProcess = useCallback((fileId: string) => {
     setFiles(prevFiles => 

@@ -52,6 +52,11 @@ export type UploadedFile = {
   size: number;
   type: "PDF" | "Excel";
   uploadDate: Date;
+  uploadedBy: {
+    id: string;
+    name: string;
+    email: string;
+  };
   icon: ReactNode;
   status: FileStatus;
   processedData: ProcessedData | null;

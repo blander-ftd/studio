@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import type { UploadedFile } from "@/types";
+import type { UploadedFile, ProcessedData } from "@/types";
 import { FileSummary } from "./file-summary";
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -35,33 +35,80 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
   }
 
   const renderDataPreview = () => {
-    if (!file.processedData || !file.processedData.products || file.processedData.products.length === 0) {
+    if (!file.processedData) {
         return <p className="text-muted-foreground">Aún no hay datos procesados para este archivo.</p>
     }
 
+    const { promotions } = file.processedData;
+
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Código de Producto</TableHead>
-            <TableHead>Descripción</TableHead>
-            <TableHead>Marca</TableHead>
-            <TableHead>Categoría</TableHead>
-            <TableHead>Descuento</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {file.processedData.products.map((product: any, index: number) => (
-            <TableRow key={index}>
-              <TableCell className="font-mono text-xs">{product.product_code}</TableCell>
-              <TableCell>{product.product_description}</TableCell>
-              <TableCell>{product.brand}</TableCell>
-              <TableCell>{product.category}</TableCell>
-              <TableCell>{product.discount_description}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <div>
+        {promotions.products && promotions.products.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Promociones de Productos</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead>Marca</TableHead>
+                  <TableHead>Categoría</TableHead>
+                  <TableHead>Desc. PSL</TableHead>
+                  <TableHead>Desc. PVP</TableHead>
+                  <TableHead>Condiciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {promotions.products.map((product, index) => (
+                  <TableRow key={`product-${index}`}>
+                    <TableCell className="font-mono text-xs">{product.product_code}</TableCell>
+                    <TableCell>{product.product_description}</TableCell>
+                    <TableCell>{product.brand}</TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    <TableCell>{product.psl_discount ? `${(product.psl_discount * 100).toFixed(2)}%` : '-'}</TableCell>
+                    <TableCell>{product.pvp_discount ? `${(product.pvp_discount * 100).toFixed(2)}%` : '-'}</TableCell>
+                    <TableCell>{product.offer_conditions}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {promotions.combos && promotions.combos.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-2">Promociones de Combos</h3>
+            {promotions.combos.map((combo, index) => (
+              <div key={`combo-${index}`} className="border rounded-lg p-4 mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-semibold">{combo.combo_id}</h4>
+                  <Badge>{combo.type}: {combo.value}</Badge>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Código</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead>Marca</TableHead>
+                      <TableHead>Categoría</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {combo.products.map((product, pIndex) => (
+                      <TableRow key={`combo-product-${pIndex}`}>
+                        <TableCell className="font-mono text-xs">{product.product_code}</TableCell>
+                        <TableCell>{product.product_description}</TableCell>
+                        <TableCell>{product.brand}</TableCell>
+                        <TableCell>{product.category}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     )
   }
 
@@ -90,6 +137,12 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
                     <span className="text-muted-foreground">Nombre</span>
                     <span className="truncate font-medium" title={file.name}>{file.name}</span>
                     
+                    <span className="text-muted-foreground">Proveedor</span>
+                    <span className="font-medium">{file.processedData?.general_data.supplier || 'N/A'}</span>
+
+                    <span className="text-muted-foreground">Mes de Validez</span>
+                    <span className="font-medium">{file.processedData?.general_data.month || 'N/A'}</span>
+
                     <span className="text-muted-foreground">Tipo</span>
                     <span className="font-medium">{file.type}</span>
 
@@ -100,8 +153,8 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
                     <span className="font-medium">{new Date(file.uploadDate).toLocaleDateString()}</span>
                 </CardContent>
             </Card>
-            {file.processedData && file.processedData.products && file.processedData.products.length > 0 && (
-                <FileSummary products={file.processedData.products} />
+            {file.processedData && (
+                <FileSummary processedData={file.processedData} />
             )}
         </div>
         <Card>

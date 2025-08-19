@@ -1,21 +1,86 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { FileSpreadsheet, Download } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 
+interface ProcessedFile {
+  id: string;
+  file_name: string;
+  created_time: Timestamp;
+  uploaded_by?: {
+    name: string;
+  };
+}
 
 export default function ExcelExportPage() {
   const [date, setDate] = useState<DateRange | undefined>(undefined);
   const { toast } = useToast();
+  const [files, setFiles] = useState<ProcessedFile[]>([]);
+  const [loadingFiles, setLoadingFiles] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  const handleGenerateExcel = async () => {
-    if (!date?.from || !date?.to) {
+  useEffect(() => {
+    const fetchFiles = async () => {
+      setLoadingFiles(true);
+      try {
+        const startDate = new Date(selectedYear, selectedMonth, 1);
+        const endDate = new Date(selectedYear, selectedMonth + 1, 1);
+
+        const q = query(
+          collection(db, "processed_files"),
+          where("created_time", ">=", Timestamp.fromDate(startDate)),
+          where("created_time", "<", Timestamp.fromDate(endDate))
+        );
+
+        const querySnapshot = await getDocs(q);
+        const fetchedFiles: ProcessedFile[] = [];
+        querySnapshot.forEach((doc) => {
+          fetchedFiles.push({ id: doc.id, ...doc.data() } as ProcessedFile);
+        });
+        setFiles(fetchedFiles);
+      } catch (error) {
+        console.error("Error fetching processed files:", error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los archivos procesados.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingFiles(false);
+      }
+    };
+
+    fetchFiles();
+  }, [selectedMonth, selectedYear, toast]);
+  
+  const handleGenerateExcel = async (range?: DateRange) => {
+    const targetRange = range || date;
+
+    if (!targetRange?.from || !targetRange?.to) {
       toast({
         title: "Error",
         description: "Por favor seleccione un rango de fechas.",
@@ -31,8 +96,8 @@ export default function ExcelExportPage() {
       return `${year}-${month}-${day}`; // YYYY-MM-DD
     };
 
-    const startDate = formatDate(date.from);
-    const endDate = formatDate(date.to);
+    const startDate = formatDate(targetRange.from);
+    const endDate = formatDate(targetRange.to);
 
     toast({
       title: "Generación iniciada",
@@ -200,10 +265,93 @@ export default function ExcelExportPage() {
                         Seleccione el rango de fechas para la exportación.
                     </p>
                 </div>
-                <Button onClick={handleGenerateExcel} className="w-full sm:w-auto">
+                <Button onClick={() => handleGenerateExcel()} className="w-full sm:w-auto">
                     <Download className="mr-2 h-4 w-4" />
                     Generar Excel
                 </Button>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Archivos Procesados del Mes</CardTitle>
+                <div className="flex items-center gap-4 pt-2">
+                    <Select
+                        value={String(selectedMonth)}
+                        onValueChange={(value) => setSelectedMonth(Number(value))}
+                    >
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Seleccionar Mes" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {Array.from({ length: 12 }, (_, i) => (
+                                <SelectItem key={i} value={String(i)}>
+                                    {new Date(0, i).toLocaleString('es-ES', { month: 'long' })}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Select
+                        value={String(selectedYear)}
+                        onValueChange={(value) => setSelectedYear(Number(value))}
+                    >
+                        <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Seleccionar Año" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                <SelectItem key={year} value={String(year)}>
+                                    {year}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Nombre del Archivo</TableHead>
+                            <TableHead>Usuario</TableHead>
+                            <TableHead>Fecha de Creación</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {loadingFiles ? (
+                            <TableRow>
+                                <TableCell colSpan={4}>Cargando archivos...</TableCell>
+                            </TableRow>
+                        ) : files.length > 0 ? (
+                            files.map((file) => (
+                                <TableRow key={file.id}>
+                                    <TableCell>{file.file_name}</TableCell>
+                                    <TableCell>{file.uploaded_by?.name || 'N/A'}</TableCell>
+                                    <TableCell>
+                                        {file.created_time.toDate().toLocaleString('es-ES')}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleGenerateExcel({
+                                                from: file.created_time.toDate(),
+                                                to: file.created_time.toDate()
+                                            })}
+                                        >
+                                            <Download className="h-4 w-4" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={4}>No se encontraron archivos para el mes seleccionado.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </CardContent>
         </Card>
     </div>

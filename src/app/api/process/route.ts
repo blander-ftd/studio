@@ -7,9 +7,10 @@ import { FieldValue } from 'firebase-admin/firestore';
 export async function POST(request: Request) {
   try {
     const body: ExtractDataInput = await request.json();
+    const { uploadedBy, ...extractDataInput } = body;
     
     // Call the Genkit flow
-    const processedData = await extractData(body);
+    const processedData = await extractData(extractDataInput);
 
     console.log('Data from Gemini:', JSON.stringify(processedData, null, 2));
 
@@ -19,8 +20,18 @@ export async function POST(request: Request) {
       await dbAdmin.collection('processed_files').add({
         ...general_data,
         ...promotions,
+        uploaded_by: uploadedBy,
         created_time: FieldValue.serverTimestamp(),
       });
+    } else if (processedData) {
+      const { general_data, promotions } = processedData;
+      const firebaseData = {
+        ...general_data,
+        ...promotions,
+        uploaded_by: uploadedBy,
+        created_time: new Date(),
+      };
+      console.log('Firebase data (local):', JSON.stringify(firebaseData, null, 2));
     }
 
     return NextResponse.json(processedData);

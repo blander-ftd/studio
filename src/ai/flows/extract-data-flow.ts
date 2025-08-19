@@ -21,6 +21,11 @@ const ExtractDataInputSchema = z.object({
   fileType: z.enum(['pdf', 'excel']).describe('The type of the file provided.'),
   fileName: z.string().optional().describe('Original file name (optional).'),
   fileSize: z.number().optional().describe('Original file size in bytes (optional).'),
+  uploadedBy: z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+  }).optional().describe('User who uploaded the file (optional).'),
 });
 
 export type ExtractDataInput = z.infer<typeof ExtractDataInputSchema>;
@@ -58,12 +63,14 @@ const ComboPromotionSchema = z.object({
   products: z.array(ComboProductSchema).optional(),
 });
 
+const PromotionsSchema = z.object({
+  products: z.array(ProductPromotionSchema).describe("A list of individual product promotions."),
+  combos: z.array(ComboPromotionSchema).describe("A list of combo promotions, in which there is a list of individual products in the combo."),
+});
+
 const ExtractDataOutputSchema = z.object({
   general_data: GeneralDataSchema,
-  promotions: z.object({
-    products: z.array(ProductPromotionSchema).describe("A list of individual product promotions."),
-    combos: z.array(ComboPromotionSchema).describe("A list of combo promotions."),
-  }),
+  promotions: PromotionsSchema.partial(), // This makes all properties of promotions optional
 });
 
 export type ExtractDataOutput = z.infer<typeof ExtractDataOutputSchema>;
@@ -76,17 +83,13 @@ const basePrompt = `Role: You are a data extraction system that processes suppli
 
 const extractDataPrompt = ai.definePrompt({
   name: 'extractDataPrompt',
-  input: { schema: z.object({ fileContent: z.string() }) },
+  input: { schema: z.object({ fileContent: z.string(), fileName: z.string().optional() }) },
   output: { schema: ExtractDataOutputSchema },
   prompt: `${basePrompt}
 
-File (text/csv):
+File: {{{fileName}}}
+Content (text/csv):
 {{{fileContent}}}
-`,
-  pdfPrompt: `${basePrompt}
-
-File (pdf):
-{{media url=fileContent}}
 `,
 });
 
@@ -119,18 +122,21 @@ const extractDataFlow = ai.defineFlow(
       }
     }
     
-    const { output } = isPdf
-      ? await extractDataPrompt.pdf({ fileContent })
-      : await extractDataPrompt({ fileContent });
+    const { output } = await extractDataPrompt({ fileContent, fileName: input.fileName });
 
     // Gracefully handle cases where the AI returns no valid output.
     if (!output) {
       throw new Error("The AI model did not return any data.");
     }
     
+    // Ensure the original file name is preserved, overriding anything the AI might have hallucinated.
+    if (input.fileName) {
+      output.general_data.file_name = input.fileName;
+    }
+    
     // Final validation to ensure data integrity before returning
-    const validatedProducts = output.promotions.products.filter(p => p.product_code && p.product_description);
-    const validatedCombos = output.promotions.combos.filter(c => c.combo_id && c.products.length > 0);
+    const validatedProducts = (output.promotions?.products || []).filter((p: any) => p.product_code && p.product_description);
+    const validatedCombos = (output.promotions?.combos || []).filter((c: any) => c.combo_id && c.products && c.products.length > 0);
 
     return { 
       general_data: output.general_data,
