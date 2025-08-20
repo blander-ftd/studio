@@ -23,17 +23,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Eye, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
-
+import { collection, query, where, getDocs, Timestamp, doc, deleteDoc, getDoc } from "firebase/firestore";
+import { getStorage, ref, deleteObject } from "firebase/storage";
+import { useAuth } from "@/context/auth-context";
 interface ProcessedFile {
   id: string;
   file_name: string;
   created_time: Timestamp;
   uploaded_by?: {
+    id?: string;
     name: string;
+    email?: string;
   };
   processedData?: any;
 }
@@ -45,6 +59,90 @@ export default function ExcelExportPage() {
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const { user } = useAuth();
+  const isAdmin = user?.role === "Admin";
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleViewClick = async (file: ProcessedFile) => {
+    try {
+      console.log("handleViewClick called with file:", file);
+
+      const processedData = {
+        general_data: {
+          file_name: file.file_name,
+          supplier: file.processedData?.general_data?.supplier || file.supplier,
+          month: file.processedData?.general_data?.month || file.month,
+        },
+        promotions: {
+          products: file.processedData?.promotions?.products || file.products || [],
+          combos: file.processedData?.promotions?.combos || file.combos || [],
+        },
+      };
+
+      console.log("Processed data constructed:", processedData);
+
+      const transformedFile = {
+        id: file.id,
+        name: file.file_name,
+        size: file.size || 0,
+        type: "Excel" as const,
+        uploadDate: file.created_time.toDate(),
+        uploadedBy: {
+          id: file.uploaded_by?.id || "unknown",
+          name: file.uploaded_by?.name || "Unknown User",
+          email: file.uploaded_by?.email || "unknown@example.com",
+        },
+        icon: "📄",
+        status: "Procesado" as const,
+        processedData,
+        file: new File([], file.file_name),
+      };
+
+      console.log("Transformed file object:", transformedFile);
+
+      sessionStorage.setItem(`selectedFile_${file.id}`, JSON.stringify(transformedFile));
+      console.log(`Saved transformed file to sessionStorage with key selectedFile_${file.id}`);
+
+      router.push(`/dashboard/file/${file.id}?from=excel-export`);
+      console.log(`Navigated to /dashboard/file/${file.id}?from=excel-export`);
+    } catch (error) {
+      console.error("Error handling file details:", error);
+      toast({ title: "Error", description: "No se pudo cargar la información del archivo.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteFile = async () => {
+    if (!fileToDelete) return;
+
+    try {
+      const file = files.find(f => f.id === fileToDelete);
+      if (file) {
+        const storage = getStorage();
+        // Correctly reference the file in the "uploads/{userId}/{fileName}" path
+        const userId = user?.id; // Assuming user object contains the id
+        if (!userId) {
+            toast({ title: "Error", description: "No se pudo identificar al usuario para la eliminación.", variant: "destructive" });
+            return;
+        }
+        const filePath = `uploads/${userId}/${file.file_name}`;
+        const fileRef = ref(storage, filePath);
+        await deleteObject(fileRef);
+      }
+      
+      await deleteDoc(doc(db, "processed_files", fileToDelete));
+      
+      setFiles(files.filter(f => f.id !== fileToDelete));
+      toast({ title: "Éxito", description: "Archivo eliminado correctamente." });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      toast({ title: "Error", description: "No se pudo eliminar el archivo.", variant: "destructive" });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setFileToDelete(null);
+    }
+  };
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -62,8 +160,28 @@ export default function ExcelExportPage() {
         const querySnapshot = await getDocs(q);
         const fetchedFiles: ProcessedFile[] = [];
         querySnapshot.forEach((doc) => {
-          fetchedFiles.push({ id: doc.id, ...doc.data() } as ProcessedFile);
+          const data = doc.data();
+          const processedData = {
+            general_data: {
+              file_name: data.file_name,
+              supplier: data.supplier,
+              month: data.month,
+            },
+            promotions: {
+              products: data.products || [],
+              combos: data.combos || [],
+            },
+          };
+          console.log("Processed data constructed:", processedData);
+          fetchedFiles.push({ 
+            id: doc.id, 
+            file_name: data.file_name,
+            created_time: data.created_time,
+            uploaded_by: data.uploaded_by,
+            processedData,
+          } as ProcessedFile);
         });
+        console.log("Fetched files:", fetchedFiles);
         setFiles(fetchedFiles);
       } catch (error) {
         console.error("Error fetching processed files:", error);
@@ -80,17 +198,6 @@ export default function ExcelExportPage() {
     fetchFiles();
   }, [selectedMonth, selectedYear, toast]);
 
-  const handleViewClick = (file: ProcessedFile) => {
-    // Store file data in sessionStorage for the detail view
-    try {
-      sessionStorage.setItem(`selectedFile_${file.id}`, JSON.stringify(file));
-    } catch (error) {
-      console.error("Could not save file to sessionStorage", error);
-    }
-  };
-
-
-  
   const handleGenerateExcel = async (range?: DateRange) => {
     const targetRange = range || date;
 
@@ -349,14 +456,24 @@ export default function ExcelExportPage() {
                                              <Button
                                                  variant="ghost"
                                                  size="icon"
-                                                 asChild
                                                  onClick={() => handleViewClick(file)}
                                              >
-                                                 <Link href={`/dashboard/file/${file.id}`}>
-                                                     <Eye className="h-4 w-4" />
-                                                     <span className="sr-only">Ver</span>
-                                                 </Link>
+                                                 <Eye className="h-4 w-4" />
+                                                 <span className="sr-only">Ver</span>
                                              </Button>
+                                             {isAdmin && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        setFileToDelete(file.id);
+                                                        setIsDeleteDialogOpen(true);
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    <span className="sr-only">Eliminar</span>
+                                                </Button>
+                                             )}
                                              <Button
                                                  variant="ghost"
                                                  size="icon"
@@ -380,6 +497,24 @@ export default function ExcelExportPage() {
                 </Table>
             </CardContent>
         </Card>
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente el archivo y sus datos asociados.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={handleDeleteFile}
+                    >
+                        Continuar
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }

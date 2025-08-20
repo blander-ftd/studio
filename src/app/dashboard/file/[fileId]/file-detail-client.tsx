@@ -9,6 +9,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { UploadedFile, ProcessedData } from "@/types";
 import { FileSummary } from "./file-summary";
+import { useSearchParams } from "next/navigation";
 
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return "0 Bytes";
@@ -21,6 +22,9 @@ function formatBytes(bytes: number, decimals = 2) {
 
 
 export default function FileDetailClient({ file }: { file: UploadedFile | null }) {
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+  const backUrl = from === "excel-export" ? "/dashboard/excel-export" : "/dashboard";
 
   if (!file) {
     return (
@@ -28,7 +32,7 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
             <h1 className="text-2xl font-bold">Archivo no encontrado</h1>
             <p className="text-muted-foreground">El archivo que busca no existe o ha sido eliminado.</p>
             <Button asChild className="mt-4">
-                <Link href="/dashboard">Volver al Inicio</Link>
+                <Link href={backUrl}>Volver al Inicio</Link>
             </Button>
         </div>
     );
@@ -76,7 +80,7 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
         )}
 
         {promotions.combos && promotions.combos.length > 0 && (
-          <div className="mt-6">
+          <div className="mt-6" id="combos-section">
             <h3 className="text-lg font-semibold mb-2">Promociones de Combos</h3>
             {promotions.combos.map((combo, index) => (
               <div key={`combo-${index}`} className="border rounded-lg p-4 mb-4">
@@ -116,7 +120,7 @@ export default function FileDetailClient({ file }: { file: UploadedFile | null }
     <div className="flex-1 space-y-4">
        <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" className="h-7 w-7" asChild>
-            <Link href="/dashboard">
+            <Link href={backUrl}>
               <ArrowLeft className="h-4 w-4" />
               <span className="sr-only">Volver</span>
             </Link>

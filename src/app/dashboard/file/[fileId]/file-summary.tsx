@@ -24,6 +24,13 @@ export function FileSummary({ processedData }: FileSummaryProps) {
     const uniqueBrands = new Set(allProducts.map(p => p.brand)).size;
     const totalCombos = combos.length;
 
+    const scrollToCombos = () => {
+        const combosSection = document.getElementById("combos-section");
+        if (combosSection) {
+            combosSection.scrollIntoView({ behavior: "smooth" });
+        }
+    };
+
     return (
         <Card className="lg:col-span-2">
             <CardHeader>
@@ -35,7 +42,10 @@ export function FileSummary({ processedData }: FileSummaryProps) {
                     <p className="text-2xl font-bold">{totalProducts}</p>
                     <p className="text-sm text-muted-foreground">Productos Totales</p>
                 </div>
-                <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted">
+                <div 
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted cursor-pointer"
+                    onClick={scrollToCombos}
+                >
                     <Component className="h-8 w-8 text-primary" />
                     <p className="text-2xl font-bold">{totalCombos}</p>
                     <p className="text-sm text-muted-foreground">Combos Totales</p>

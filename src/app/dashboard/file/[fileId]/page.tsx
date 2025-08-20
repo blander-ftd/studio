@@ -27,6 +27,7 @@ export default function FileDetailPage() {
             const hydratedFile = {
                 ...storedFile,
                 uploadDate: new Date(storedFile.uploadDate),
+                processedData: storedFile.processedData || null,
             };
             setFile(hydratedFile);
         }
